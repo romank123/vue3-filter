@@ -1,0 +1,384 @@
+@use './colors.scss';
+@use './mixins.scss';
+
+.f1-medium {
+  font-size: 88px;
+  line-height: 88px;
+  font-family: 'Gilroy-500';
+  color: colors.$eyck;
+
+  @include mixins.tablet {
+    font-size: 68px;
+    line-height: 68px;
+  }
+
+  @include mixins.mobile {
+    font-size: 40px;
+    line-height: 44px;
+  }
+}
+
+.f2-semibold {
+  font-size: 68px;
+  line-height: 68px;
+  font-family: 'Gilroy-600';
+  color: colors.$eyck;
+
+  @include mixins.tablet {
+    font-size: 44px;
+    line-height: 48px;
+  }
+
+  @include mixins.mobile {
+    font-size: 30px;
+    line-height: 36px;
+  }
+}
+
+// headers
+.h1-semibold {
+  font-size: 44px;
+  line-height: 48px;
+  font-family: 'Gilroy-600';
+  color: colors.$eyck;
+
+  @include mixins.tablet {
+    font-size: 32px;
+    line-height: 36px;
+  }
+
+  @include mixins.mobile {
+    font-size: 22px;
+    line-height: 28px;
+  }
+}
+
+.h1-medium {
+  font-size: 44px;
+  line-height: 48px;
+  font-family: 'Gilroy-500';
+  color: colors.$eyck;
+
+  @include mixins.tablet {
+    font-size: 32px;
+    line-height: 36px;
+  }
+
+  @include mixins.mobile {
+    font-size: 22px;
+    line-height: 28px;
+  }
+}
+
+.h2-semibold {
+  font-size: 32px;
+  line-height: 36px;
+  font-family: 'Gilroy-600';
+  color: colors.$eyck;
+
+  @include mixins.tablet {
+    font-size: 24px;
+    line-height: 28px;
+  }
+
+  @include mixins.mobile {
+    font-size: 20px;
+    line-height: 24px;
+  }
+}
+
+.h3-semibold {
+  font-size: 24px;
+  line-height: 28px;
+  font-family: 'Gilroy-600';
+  color: colors.$eyck;
+
+  @include mixins.tablet {
+    font-size: 20px;
+    line-height: 24px;
+  }
+
+  @include mixins.mobile {
+    font-size: 18px;
+    line-height: 24px;
+  }
+}
+
+.h4-semibold {
+  font-size: 20px;
+  line-height: 24px;
+  font-family: 'Gilroy-600';
+  color: colors.$eyck;
+
+  @include mixins.mobile {
+    font-size: 16px;
+    line-height: 20px;
+  }
+}
+
+// paragraphs
+.p1-medium {
+  font-size: 16px;
+  line-height: 24px;
+  font-family: 'Gilroy-500';
+  color: colors.$eyck;
+
+  @include mixins.mobile {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+.p1-semibold {
+  font-size: 16px;
+  line-height: 24px;
+  font-family: 'Gilroy-600';
+  color: colors.$eyck;
+
+  @include mixins.mobile {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+.p2-medium {
+  font-size: 14px;
+  line-height: 20px;
+  font-family: 'Gilroy-500';
+  color: colors.$eyck;
+}
+
+.p2-semibold {
+  font-size: 14px;
+  line-height: 20px;
+  font-family: 'Gilroy-600';
+  color: colors.$eyck;
+}
+
+.p3-medium {
+  font-size: 12px;
+  line-height: 16px;
+  font-family: 'Gilroy-500';
+  color: colors.$eyck;
+}
+
+@include mixins.tablet {
+  .f1-t-medium {
+    font-size: 68px;
+    line-height: 68px;
+    font-family: 'Gilroy-500';
+		color: colors.$eyck;
+
+    @include mixins.mobile {
+			font-size: 40px;
+			line-height: 44px;
+		}
+  }
+
+  .f2-t-semibold {
+    font-size: 44px;
+    line-height: 48px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+
+    @include mixins.mobile {
+      font-size: 30px;
+      line-height: 36px;
+    }
+  }
+
+  // headers
+  .h1-t-semibold {
+    font-size: 32px;
+    line-height: 36px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+
+    @include mixins.mobile {
+      font-size: 22px;
+      line-height: 28px;
+    }
+  }
+
+  .h1-t-medium {
+    font-size: 32px;
+    line-height: 36px;
+    font-family: 'Gilroy-500';
+    color: colors.$eyck;
+
+    @include mixins.mobile {
+      font-size: 22px;
+      line-height: 28px;
+    }
+  }
+
+  .h2-t-semibold {
+    font-size: 24px;
+    line-height: 28px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+
+    @include mixins.mobile {
+      font-size: 20px;
+      line-height: 24px;
+    }
+  }
+
+  .h3-t-semibold {
+    font-size: 20px;
+    line-height: 24px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+
+    @include mixins.mobile {
+      font-size: 18px;
+      line-height: 24px;
+    }
+  }
+
+  .h4-t-semibold {
+    font-size: 20px;
+    line-height: 24px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+
+    @include mixins.mobile {
+      font-size: 16px;
+      line-height: 20px;
+    }
+  }
+
+  // paragraphs
+  .p1-t-medium {
+    font-size: 16px;
+    line-height: 24px;
+    font-family: 'Gilroy-500';
+    color: colors.$eyck;
+
+    @include mixins.mobile {
+      font-size: 14px;
+      line-height: 20px;
+    }
+  }
+
+  .p1-t-semibold {
+    font-size: 16px;
+    line-height: 24px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+
+    @include mixins.mobile {
+      font-size: 14px;
+      line-height: 20px;
+    }
+  }
+
+  .p2-t-medium {
+    font-size: 14px;
+    line-height: 20px;
+    font-family: 'Gilroy-500';
+    color: colors.$eyck;
+  }
+
+  .p2-t-semibold {
+    font-size: 14px;
+    line-height: 20px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+  }
+
+  .p3-t-medium {
+    font-size: 12px;
+    line-height: 16px;
+    font-family: 'Gilroy-500';
+    color: colors.$eyck;
+  }
+}
+
+@include mixins.mobile {
+  .f1-m-medium {
+    font-family: 'Gilroy-500';
+		color: colors.$eyck;
+    font-size: 40px;
+    line-height: 44px;
+  }
+
+  .f2-m-semibold {
+    font-size: 30px;
+    line-height: 36px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+  }
+
+  // headers
+  .h1-m-semibold {
+    font-size: 22px;
+    line-height: 28px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+  }
+
+  .h1-m-medium {
+    font-size: 22px;
+    line-height: 28px;
+    font-family: 'Gilroy-500';
+    color: colors.$eyck;
+  }
+
+  .h2-m-semibold {
+    font-size: 20px;
+    line-height: 24px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+  }
+
+  .h3-m-semibold {
+    font-size: 18px;
+    line-height: 24px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+  }
+
+  .h4-m-semibold {
+    font-size: 16px;
+    line-height: 20px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+  }
+
+  // paragraphs
+  .p1-m-medium {
+    font-size: 14px;
+    line-height: 20px;
+    font-family: 'Gilroy-500';
+    color: colors.$eyck;
+  }
+
+  .p1-m-semibold {
+    font-size: 14px;
+    line-height: 20px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+  }
+
+  .p2-m-medium {
+    font-size: 14px;
+    line-height: 20px;
+    font-family: 'Gilroy-500';
+    color: colors.$eyck;
+  }
+
+  .p2-m-semibold {
+    font-size: 14px;
+    line-height: 20px;
+    font-family: 'Gilroy-600';
+    color: colors.$eyck;
+  }
+
+  .p3-m-medium {
+    font-size: 12px;
+    line-height: 16px;
+    font-family: 'Gilroy-500';
+    color: colors.$eyck;
+  }
+}

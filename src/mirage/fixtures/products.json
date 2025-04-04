@@ -1,0 +1,25 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Ноутбук",
+      "price": 75000,
+      "category": "electronics",
+      "available": true
+    },
+    {
+      "id": 2,
+      "name": "Смартфон",
+      "price": 45000,
+      "category": "electronics",
+      "available": true
+    },
+    {
+      "id": 3,
+      "name": "Наушники",
+      "price": 8500,
+      "category": "accessories",
+      "available": false
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+@use '@/scss/colors.scss';
+@use '@/scss/mixins.scss';
+@use '@/scss/typography.scss';
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.ds-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  @include mixins.mf-tablet {
+    display: none;
+  }
+
+  &__backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  &__container {
+    position: relative;
+    max-height: 80vh;
+    width: 100%;
+    background-color: #fff;
+    border-radius: 16px 16px 0 0;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__header {
+    display: flex;
+    border-bottom: 1px solid colors.$dalí;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    h3 {
+      @extend .h3-t-semibold;
+      @extend .h3-m-semibold;
+    }
+  }
+
+  &__close-btn {
+    background: none;
+    border: 1px solid colors.$eyck;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  &__content {
+    overflow-y: auto;
+    flex-grow: 1;
+  }
+}

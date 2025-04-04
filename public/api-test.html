@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>API Test</title>
+    <style>
+      pre {
+        background: #f4f4f4;
+        padding: 10px;
+        max-height: 400px;
+        overflow: auto;
+      }
+      .error {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>API Testing Page</h1>
+    <div>
+      <label for="apiUrl">API URL:</label>
+      <input type="text" id="apiUrl" value="/api/users" style="width: 300px" />
+    </div>
+    <button id="testBtn">Test API</button>
+    <h3>Response Headers:</h3>
+    <pre id="headers"></pre>
+    <h3>Response Body:</h3>
+    <pre id="result"></pre>
+
+    <script>
+      document.getElementById('testBtn').addEventListener('click', async () => {
+        const result = document.getElementById('result')
+        const headers = document.getElementById('headers')
+        const url = document.getElementById('apiUrl').value
+
+        result.textContent = 'Loading...'
+        headers.textContent = ''
+
+        try {
+          // Выполняем запрос
+          const response = await fetch(url)
+
+          // Отображаем заголовки
+          const headersText = []
+          response.headers.forEach((value, name) => {
+            headersText.push(`${name}: ${value}`)
+          })
+          headers.textContent = headersText.join('\n')
+
+          // Получаем тело ответа как текст
+          const text = await response.text()
+
+          // Пытаемся разобрать как JSON
+          try {
+            const data = JSON.parse(text)
+            result.textContent = JSON.stringify(data, null, 2)
+          } catch (jsonError) {
+            // Если не JSON, отображаем как текст
+            result.innerHTML = `<div class="error">Не JSON: ${
+              jsonError.message
+            }</div>
+                             <div>${text.substring(0, 1000)}${
+              text.length > 1000 ? '...' : ''
+            }</div>`
+          }
+        } catch (error) {
+          result.innerHTML = `<div class="error">Error: ${error.message}</div>`
+        }
+      })
+    </script>
+  </body>
+</html>

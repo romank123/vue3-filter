@@ -1,0 +1,28 @@
+@use '../abstracts/' as *;
+
+html {
+  font-size: 90%;
+
+  @include mq(x-small) {
+    font-size: 95%;
+  }
+
+  @include mq(small) {
+    font-size: 100%;
+  }
+
+  @include mq(large) {
+    font-size: 105%;
+  }
+
+  @include mq(x-large) {
+    font-size: 110%;
+  }
+}
+
+body {
+  background-color: var(--clr-neutral-background);
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}

@@ -1,0 +1,12 @@
+@use '../abstracts' as *;
+
+.container {
+  padding: 0 1.5rem;
+  width: 100%;
+  max-width: 65rem;
+  margin: 0 auto;
+}
+
+.spacing > * + * {
+  margin-top: var(--spacing, 0.75em);
+}

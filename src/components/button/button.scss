@@ -1,0 +1,327 @@
+@use '@/scss/colors.scss';
+@use '@/scss/mixins.scss';
+
+.ds-button {
+	background: colors.$raphael;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	border-radius: 24px;
+	padding: 11px 23px;
+	color: colors.$aivazovsky;
+	cursor: pointer;
+	box-sizing: border-box;
+	border: 1px solid colors.$raphael;
+	transition: 0.3s linear background-color, 0.3s linear border-color,
+		0.3s linear color;
+
+	@include mixins.mobile {
+		padding: 9px 19px;
+	}
+
+	&__text {
+		white-space: nowrap;
+	}
+
+	// Primary Dark Mode
+	&._dark {
+		@media (hover: hover) {
+			&:hover {
+				border-color: colors.$aivazovsky;
+				color: colors.$aivazovsky;
+
+				svg path,
+				svg rect {
+					fill: colors.$aivazovsky;
+				}
+			}
+		}
+
+		&:active {
+			border-color: colors.$boticelli;
+
+			svg path,
+			svg rect {
+				fill: colors.$aivazovsky;
+			}
+		}
+
+		&:disabled {
+			pointer-events: none;
+			background-color: colors.$durer;
+			border-color: colors.$durer;
+		}
+	}
+
+	//- modificators
+	// sizes
+	&._medium {
+		font-size: 14px;
+		line-height: 20px;
+		padding: 9px 19px;
+
+		svg {
+			height: 16px;
+			width: 16px;
+		}
+
+		@include mixins.mobile {
+			padding: 5px 15px;
+		}
+	}
+
+	// icon
+	svg {
+		height: 24px;
+		width: 24px;
+
+		@include mixins.mobile {
+			height: 16px;
+			width: 16px;
+		}
+
+		path,
+		rect {
+			transition: 0.3s linear fill, 3s linear stroke;
+		}
+	}
+
+	&._icon-right {
+		flex-direction: row-reverse;
+	}
+
+	&._icon-only {
+		padding: 11px;
+
+		&._medium {
+			@include mixins.mobile {
+				padding: 7px;
+			}
+		}
+
+		&._long-icon {
+			padding: 11px 19px;
+
+			@include mixins.mobile {
+				padding: 11px 17px;
+			}
+
+			&._medium {
+				padding: 11px 17px;
+
+				@include mixins.mobile {
+					padding: 7px 15px;
+				}
+			}
+		}
+	}
+
+	// secondary
+	&._secondary {
+		background-color: colors.$eyck;
+		color: colors.$aivazovsky;
+		border-color: colors.$eyck;
+
+		&._dark {
+			background-color: colors.$aivazovsky;
+			color: colors.$eyck;
+			border-color: colors.$aivazovsky;
+
+			svg path,
+			svg rect {
+				fill: colors.$eyck;
+			}
+
+			@media (hover: hover) {
+				&:hover {
+					background-color: transparent;
+					color: colors.$aivazovsky;
+
+					svg path,
+					svg rect {
+						fill: colors.$aivazovsky;
+					}
+				}
+			}
+
+			&:active {
+				background-color: colors.$dalí;
+				color: colors.$eyck;
+
+				svg path,
+				svg rect {
+					fill: colors.$eyck;
+				}
+			}
+
+			&:disabled {
+				background-color: colors.$durer;
+				border-color: colors.$durer;
+				color: colors.$vinci;
+			}
+		}
+	}
+
+	// outline
+	&._outline {
+		background-color: transparent;
+		color: colors.$eyck;
+		border-color: colors.$eyck;
+
+		&._dark {
+			color: colors.$aivazovsky;
+			border-color: colors.$aivazovsky;
+
+			svg path,
+			svg rect {
+				fill: colors.$aivazovsky;
+			}
+
+			@media (hover: hover) {
+				&:hover {
+					color: colors.$aivazovsky;
+
+					svg path,
+					svg rect {
+						fill: colors.$aivazovsky;
+					}
+				}
+			}
+
+			&:active {
+				background-color: colors.$boticelli;
+				border-color: colors.$boticelli;
+			}
+
+			&:disabled {
+				border-color: colors.$vinci;
+				color: colors.$vinci;
+
+				svg path,
+				svg rect {
+					fill: colors.$eyck;
+				}
+			}
+		}
+
+		svg path,
+		svg rect {
+			fill: colors.$eyck;
+		}
+
+		&:disabled {
+			background-color: transparent;
+			border-color: colors.$vinci;
+		}
+
+		@media (hover: hover) {
+			&:hover {
+				border-color: colors.$raphael;
+			}
+		}
+	}
+
+	// ghost
+	&._ghost {
+		background-color: transparent;
+		color: colors.$eyck;
+		border-color: transparent;
+
+		&._dark {
+			color: colors.$aivazovsky;
+
+			svg path,
+			svg rect {
+				fill: colors.$aivazovsky;
+			}
+
+			@media (hover: hover) {
+				&:hover {
+					color: colors.$aivazovsky;
+					background-color: colors.$durer;
+					border-color: colors.$durer;
+
+					svg path,
+					svg rect {
+						fill: colors.$aivazovsky;
+					}
+				}
+			}
+
+			&:active {
+				background-color: colors.$vermeer;
+				border-color: colors.$vermeer;
+			}
+
+			&:disabled {
+				color: colors.$vinci;
+
+				svg path,
+				svg rect {
+					fill: colors.$vinci;
+				}
+			}
+		}
+
+		svg path,
+		svg rect {
+			fill: colors.$eyck;
+		}
+
+		&:disabled {
+			background-color: transparent;
+			border-color: transparent;
+		}
+
+		@media (hover: hover) {
+			&:hover {
+				background-color: colors.$magritte;
+				border-color: colors.$magritte;
+			}
+		}
+
+		&:active {
+			background-color: colors.$dalí;
+			border-color: colors.$dalí;
+			color: colors.$eyck;
+		}
+	}
+
+	// states
+	&:disabled {
+		pointer-events: none;
+		touch-action: none;
+		background-color: colors.$dalí;
+		border-color: colors.$dalí;
+		color: colors.$vinci;
+
+		svg path,
+		svg rect {
+			fill: colors.$vinci;
+		}
+	}
+
+	@media (hover: hover) {
+		&:hover {
+			background-color: transparent;
+			border-color: colors.$eyck;
+			color: colors.$eyck;
+
+			svg path {
+				fill: colors.$eyck;
+			}
+		}
+	}
+
+	&:active {
+		background-color: colors.$boticelli;
+		border-color: colors.$boticelli;
+		color: colors.$aivazovsky;
+
+		svg path,
+		svg rect {
+			fill: colors.$aivazovsky;
+		}
+	}
+}

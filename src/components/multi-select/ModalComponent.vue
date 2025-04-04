@@ -1,0 +1,57 @@
+<template>
+  <teleport to="body">
+    <transition name="modal-fade">
+      <div v-if="modelValue" class="ds-modal">
+        <div class="ds-modal__backdrop" @click="closeModal"></div>
+        <div class="ds-modal__container">
+          <div class="ds-modal__header">
+            <slot name="header">
+              <h3>{{ title }}</h3>
+            </slot>
+            <button class="ds-modal__close-btn" @click="closeModal">
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 10 10"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M0.209209 0.209209C0.488155 -0.0697365 0.940416 -0.0697365 1.21936 0.209209L5 3.98985L8.78064 0.209209C9.05958 -0.0697365 9.51184 -0.0697365 9.79079 0.209209C10.0697 0.488155 10.0697 0.940416 9.79079 1.21936L6.01015 5L9.79079 8.78064C10.0697 9.05958 10.0697 9.51184 9.79079 9.79079C9.51184 10.0697 9.05958 10.0697 8.78064 9.79079L5 6.01015L1.21936 9.79079C0.940416 10.0697 0.488155 10.0697 0.209209 9.79079C-0.0697365 9.51184 -0.0697365 9.05958 0.209209 8.78064L3.98985 5L0.209209 1.21936C-0.0697365 0.940416 -0.0697365 0.488155 0.209209 0.209209Z"
+                  fill="#252628"
+                />
+              </svg>
+            </button>
+          </div>
+          <div class="ds-modal__content">
+            <slot></slot>
+          </div>
+        </div>
+      </div>
+    </transition>
+  </teleport>
+</template>
+
+<script>
+import './modal-component.scss'
+export default {
+  name: 'ModalComponent',
+  props: {
+    modelValue: {
+      type: Boolean,
+      default: false,
+    },
+    title: {
+      type: String,
+      default: '',
+    },
+  },
+  methods: {
+    closeModal() {
+      this.$emit('update:modelValue', false)
+    },
+  },
+}
+</script>

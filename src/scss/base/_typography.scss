@@ -1,0 +1,56 @@
+@use '../abstracts' as *;
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap');
+
+body {
+  font-size: var(--fs-300);
+  font-family: 'Fira Sans', sans-serif;
+  font-weight: 400;
+  color: var(--clr-on-surface-high);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 500;
+  line-height: 1;
+  color: var(--clr-primary-1000);
+}
+
+.title {
+  font-weight: 700;
+  font-size: clamp(var(--fs-600), calc(1rem + 5vw), 5rem);
+}
+
+.h1 {
+  font-size: var(--fs-800);
+}
+
+.h2 {
+  font-size: var(--fs-700);
+}
+
+.h3 {
+  font-size: var(--fs-600);
+}
+
+.h4 {
+  font-size: var(--fs-500);
+}
+
+.text-small {
+  font-size: var(--fs-200);
+}
+
+.link {
+  text-decoration: underline;
+
+  &:hover,
+  &:focus {
+    color: var(--clr-primary-main);
+  }
+}
+
+p {
+  color: var(--clr-font-secondary);
+}

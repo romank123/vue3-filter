@@ -1,0 +1,23 @@
+@use '@/scss/colors.scss';
+
+.ds-btn-clear {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 20px;
+	min-width: 20px;
+	height: 20px;
+	cursor: pointer;
+
+	svg {
+		display: block;
+		width: 10px;
+		height: 10px;
+	}
+}
+
+._dark {
+	.ds-btn-clear path {
+		fill: colors.$aivazovsky;
+	}
+}

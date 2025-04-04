@@ -1,0 +1,22 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "electronics",
+      "displayName": "Электроника",
+      "icon": "laptop"
+    },
+    {
+      "id": 2,
+      "name": "accessories",
+      "displayName": "Аксессуары",
+      "icon": "headphones"
+    },
+    {
+      "id": 3,
+      "name": "clothing",
+      "displayName": "Одежда",
+      "icon": "shirt"
+    }
+  ]
+}

@@ -1,0 +1,677 @@
+@use '@/scss/colors.scss';
+@use '@/scss/mixins.scss';
+
+$font-family-fallback: 'Arial', sans-serif;
+$ff-semiBold: 'Gilroy-600', $font-family-fallback;
+$ff-medium: 'Gilroy-500', $font-family-fallback;
+
+.ds-datepicker {
+	min-height: 500px;
+	input[type='date']::-webkit-inner-spin-button,
+	input[type='date']::-webkit-calendar-picker-indicator {
+		display: none;
+		-webkit-appearance: none;
+	}
+
+	&__trigger-wrap {
+		position: relative;
+	}
+
+	&__trigger {
+		display: block;
+		width: 100%;
+		padding: 10px 40px 10px 20px;
+		border-radius: 100px;
+		border: 1px solid colors.$delacroix;
+		background-color: colors.$aivazovsky;
+		transition: 0.3s;
+
+		font-family: $ff-semiBold;
+		font-size: 14px;
+		line-height: 20px;
+		color: colors.$vinci;
+		text-align: start;
+
+		span {
+			-ms-text-overflow: ellipsis;
+			-o-text-overflow: ellipsis;
+			text-overflow: ellipsis;
+			overflow: hidden;
+			-ms-line-clamp: 1;
+			-webkit-line-clamp: 1;
+			line-clamp: 1;
+			display: -webkit-box;
+			display: box;
+			word-wrap: break-word;
+			-webkit-box-orient: vertical;
+			box-orient: vertical;
+		}
+
+		&:hover,
+		&:focus {
+			transition: 0.3s;
+			border-color: colors.$eyck;
+		}
+
+		&.active {
+			border-color: colors.$eyck;
+			transition: 0.3s;
+
+			span {
+				color: colors.$eyck;
+				transition: 0.3s;
+			}
+		}
+
+		&.hasValue {
+			border-color: colors.$delacroix;
+
+			span {
+				color: colors.$eyck;
+			}
+		}
+	}
+
+	&__icon {
+		position: absolute;
+		top: 50%;
+		right: 20px;
+		width: 16px;
+		height: 16px;
+		transform: translateY(-50%);
+		transition: 0.3s;
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		svg {
+			width: 14px;
+			height: 14px;
+		}
+	}
+
+	.dp__menu {
+		border: none;
+	}
+
+	.dp__month_year_wrap {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+		width: 80%;
+		margin: 0 auto;
+	}
+
+	.dp__month_year_select {
+		font-family: $ff-semiBold;
+		font-size: 16px;
+		line-height: 24px;
+		color: colors.$eyck;
+		transition: 0.3s;
+
+		&:hover {
+			background: none;
+			color: colors.$boticelli;
+			transition: 0.3s;
+		}
+	}
+
+	.dp__inner_nav {
+		width: auto;
+		height: auto;
+		color: colors.$eyck;
+
+		&:hover {
+			background: none;
+
+			svg path {
+				fill: colors.$boticelli;
+				transition: 0.3s;
+			}
+		}
+
+		svg {
+			height: 26px;
+			width: auto;
+
+			path {
+				fill: colors.$eyck;
+				stroke: none;
+				transition: 0.3s;
+			}
+		}
+	}
+
+	.dp__calendar_item {
+		flex-grow: 0;
+	}
+
+	.dp__calendar_header_item {
+		font-family: $ff-medium;
+		font-size: 14px;
+		line-height: 20px;
+		color: colors.$vermeer;
+		font-weight: normal;
+	}
+
+	.dp__calendar_row {
+		margin: 0;
+	}
+
+	.dp__main > div:last-of-type {
+		width: 100%;
+	}
+
+	.dp__outer_menu_wrap {
+		display: flex;
+		justify-content: center;
+		width: 100%;
+	}
+
+	.dp__menu {
+		max-width: 280px;
+	}
+
+	.dp__cell_inner {
+		font-family: $ff-medium;
+		font-size: 16px;
+		line-height: 24px;
+		color: colors.$eyck;
+		transition: 0.3s;
+
+		width: 40px;
+		height: 40px;
+		border: none;
+		border-radius: 0;
+
+		&.dp__cell_offset {
+			color: colors.$vermeer;
+		}
+
+		&:hover {
+			background: none;
+			color: colors.$boticelli;
+			transition: 0.3s;
+		}
+	}
+
+	.dp__today {
+		background-color: transparent;
+		border: none;
+		border-radius: 0;
+
+		&:hover {
+			background: transparent;
+		}
+	}
+
+	.dp__range_start,
+	.dp__range_end,
+	.dp__active_date {
+		background-color: colors.$michelangelo;
+		color: colors.$aivazovsky;
+
+		&:hover {
+			background: colors.$michelangelo;
+		}
+	}
+
+	.dp__range_between {
+		background-color: colors.$picasso;
+
+		&:hover {
+			background: colors.$picasso;
+		}
+	}
+
+	.dp__selection_preview {
+		display: none;
+	}
+
+	.dp__action_buttons {
+		width: 100%;
+		display: flex;
+		justify-content: center;
+		flex: 1;
+	}
+
+	&__btn {
+		width: 100%;
+		margin-right: 16px;
+
+		.ds-button {
+			width: 100%;
+		}
+
+		&:last-of-type {
+			margin-right: 0;
+		}
+	}
+
+	&__clear {
+		position: absolute;
+		top: 50%;
+		right: 20px;
+		z-index: 1;
+		transform: translateY(-50%);
+	}
+
+	.dp__overlay_cell {
+		font-family: $ff-medium;
+		font-size: 16px;
+		line-height: 24px;
+		color: colors.$eyck;
+	}
+
+	.dp__overlay_cell_active {
+		background: colors.$michelangelo;
+		border-radius: 0;
+
+		font-family: $ff-medium;
+		font-size: 16px;
+		line-height: 24px;
+		color: colors.$aivazovsky;
+	}
+
+	.dp__overlay_cell_disabled {
+		background-color: colors.$aivazovsky;
+		color: colors.$vermeer;
+
+		&:hover {
+			color: colors.$vermeer;
+		}
+	}
+
+	&__modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 101;
+
+		&-overlay {
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 1;
+			background-color: rgba(0, 0, 0, 0.7);
+			opacity: 0;
+			transition: 0.3s;
+
+			&.active {
+				opacity: 1;
+				transition: 0.3s;
+			}
+		}
+
+		&-wrapper {
+			position: absolute;
+			top: auto;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 2;
+			max-height: 80vh;
+			background-color: colors.$aivazovsky;
+			border-top-right-radius: 16px;
+			border-top-left-radius: 16px;
+			transform: translateY(100%);
+			transition: 0.3s;
+
+			&.active {
+				transform: translateY(0);
+				transition: 0.3s;
+			}
+		}
+
+		&-header {
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+			padding: 16px;
+			border-bottom: 1px solid colors.$delacroix;
+		}
+
+		&-title {
+			font-family: $ff-semiBold;
+			font-size: 18px;
+			line-height: 24px;
+			color: colors.$eyck;
+
+			margin: 0 auto 0 0;
+		}
+
+		&-close {
+			position: relative;
+			width: 32px;
+			min-width: 32px;
+			height: 32px;
+			border: 1px solid colors.$eyck;
+			border-radius: 50%;
+			transition: 0.3s;
+
+			&::before,
+			&::after {
+				content: '';
+				display: block;
+				width: 50%;
+				height: 1px;
+				background-color: colors.$eyck;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transition: 0.3s;
+			}
+
+			&::before {
+				transform: translate(-50%, -50%) rotate(45deg);
+			}
+
+			&::after {
+				transform: translate(-50%, -50%) rotate(-45deg);
+			}
+
+			&:hover {
+				border-color: colors.$raphael;
+				transition: 0.3s;
+
+				&::before,
+				&::after {
+					background-color: colors.$raphael;
+					transition: 0.3s;
+				}
+			}
+
+			&:active {
+				border-color: colors.$boticelli;
+				transition: 0.3s;
+
+				&::before,
+				&::after {
+					background-color: colors.$boticelli;
+					transition: 0.3s;
+				}
+			}
+		}
+
+		&-scroll {
+			padding: 16px;
+			max-height: calc(80vh - 65px);
+			overflow-y: scroll;
+
+			&::-webkit-scrollbar {
+				width: 14px;
+			}
+
+			&::-webkit-scrollbar-thumb {
+				background-clip: padding-box;
+				background-color: colors.$delacroix;
+				border: 4px solid rgba(0, 0, 0, 0);
+				border-radius: 7px;
+			}
+		}
+	}
+
+	&.dark {
+		svg path {
+			fill: colors.$aivazovsky;
+		}
+
+		.ds-datepicker__trigger {
+			background-color: transparent;
+			border-color: colors.$vinci;
+			color: colors.$aivazovsky;
+
+			&:hover,
+			&:focus {
+				border-color: colors.$aivazovsky;
+			}
+
+			&.active {
+				border-color: colors.$aivazovsky;
+
+				span {
+					color: colors.$aivazovsky;
+				}
+			}
+
+			&.hasValue {
+				border-color: colors.$vinci;
+
+				span {
+					color: colors.$aivazovsky;
+				}
+			}
+		}
+
+		.dp__menu {
+			background-color: colors.$eyck;
+		}
+
+		.dp__overlay {
+			background: colors.$eyck;
+		}
+
+		.dp__month_year_select {
+			color: colors.$aivazovsky;
+
+			&:hover {
+				color: colors.$raphael;
+			}
+		}
+
+		.dp__inner_nav {
+			color: colors.$aivazovsky;
+
+			&:hover {
+				svg path {
+					fill: colors.$raphael;
+					transition: 0.3s;
+				}
+			}
+
+			svg {
+				path {
+					fill: colors.$aivazovsky;
+					stroke: none;
+				}
+			}
+		}
+
+		.dp__calendar_header_item {
+			color: colors.$vermeer;
+		}
+
+		.dp__calendar_header_separator {
+			background: colors.$vermeer;
+		}
+
+		.dp__cell_inner {
+			color: colors.$aivazovsky;
+
+			&.dp__cell_offset {
+				color: colors.$vermeer;
+			}
+
+			&.dp__cell_disabled {
+				&:hover {
+					color: colors.$vermeer;
+				}
+			}
+
+			&:hover {
+				color: colors.$raphael;
+			}
+		}
+
+		.dp__today {
+			&:hover {
+				background: transparent;
+			}
+		}
+
+		.dp__range_start,
+		.dp__range_end,
+		.dp__active_date {
+			background-color: colors.$raphael;
+			color: colors.$aivazovsky;
+
+			&:hover {
+				background: colors.$raphael;
+				color: colors.$aivazovsky;
+			}
+		}
+		.dp__date_hover_end {
+			background-color: colors.$durer;
+		}
+
+		.dp__range_between {
+			background-color: colors.$durer;
+
+			&:hover {
+				background: colors.$durer;
+				color: colors.$aivazovsky;
+			}
+		}
+
+		.dp__overlay_cell {
+			color: colors.$aivazovsky;
+			background: colors.$eyck;
+
+			&:hover {
+				background: colors.$eyck;
+				color: colors.$raphael;
+			}
+		}
+
+		.dp__overlay_cell_active {
+			background: colors.$raphael;
+			color: colors.$aivazovsky;
+		}
+
+		.dp__overlay_cell_disabled {
+			color: colors.$vermeer;
+
+			&:hover {
+				color: colors.$vermeer;
+			}
+		}
+
+		.dp__overlay_action {
+			&:hover {
+				background: colors.$durer;
+			}
+		}
+
+		.datepicker__modal {
+			&-overlay {
+				background-color: rgba(255, 255, 255, 0.6);
+			}
+
+			&-wrapper {
+				background-color: colors.$eyck;
+			}
+
+			&-header {
+				border-bottom: 1px solid colors.$durer;
+			}
+
+			&-title {
+				color: colors.$aivazovsky;
+			}
+
+			&-close {
+				border: 1px solid colors.$aivazovsky;
+
+				&::before,
+				&::after {
+					background-color: colors.$aivazovsky;
+				}
+
+				&:hover {
+					border-color: colors.$raphael;
+
+					&::before,
+					&::after {
+						background-color: colors.$raphael;
+					}
+				}
+
+				&:active {
+					border-color: colors.$boticelli;
+
+					&::before,
+					&::after {
+						background-color: colors.$boticelli;
+					}
+				}
+			}
+		}
+	}
+}
+
+@include mixins.mf-tablet {
+	.ds-datepicker {
+		min-height: 420px;
+
+		.dp__input_wrap {
+			display: none;
+		}
+
+		&__trigger {
+			padding: 12px 46px 12px 24px;
+			font-size: 16px;
+			line-height: 24px;
+			color: colors.$eyck;
+		}
+
+		.dp__menu {
+			box-shadow: 0px 8px 40px 0px rgba(27, 27, 27, 0.1);
+			border-radius: 16px;
+			padding: 20px;
+			max-width: none;
+		}
+
+		.dp__instance_calendar {
+			padding: 0;
+		}
+
+		&__btn button {
+			font-size: 14px;
+			line-height: 20px;
+			padding: 10px 30px;
+		}
+
+		.dp__arrow_top,
+		.dp__arrow_bottom {
+			border: none;
+		}
+
+		.dp__outer_menu_wrap {
+			width: auto;
+			display: block;
+		}
+
+		&.dark {
+			.dp__menu {
+				border: 1px solid colors.$aivazovsky;
+			}
+
+			.dp__arrow_top {
+				background: colors.$eyck;
+				border-top: 1px solid colors.$aivazovsky;
+				border-right: 1px solid colors.$aivazovsky;
+			}
+
+			.dp__arrow_bottom {
+				background: colors.$eyck;
+				border-right: 1px solid colors.$aivazovsky;
+				border-bottom: 1px solid colors.$aivazovsky;
+			}
+		}
+	}
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>MSW Debug</title>
+</head>
+<body>
+  <h1>MSW Debug Page</h1>
+  <button id="checkBtn">Check MSW Status</button>
+  <div id="status">Status: Unknown</div>
+
+  <h2>Test API</h2>
+  <button id="testBtn">Test API</button>
+  <pre id="result">Results will appear here</pre>
+
+  <script>
+    // Проверка статуса MSW
+    document.getElementById('checkBtn').addEventListener('click', () => {
+      const statusDiv = document.getElementById('status');
+
+      // Проверяем, зарегистрирован ли сервис-воркер
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        const hasMSW = registrations.some(reg =>
+          reg.active && reg.active.scriptURL.includes('mockServiceWorker')
+        );
+
+        if (hasMSW) {
+          statusDiv.textContent = 'Status: MSW Service Worker is ACTIVE';
+          statusDiv.style.color = 'green';
+        } else {
+          statusDiv.textContent = 'Status: MSW Service Worker is NOT ACTIVE';
+          statusDiv.style.color = 'red';
+        }
+      });
+    });
+
+    // Тест API
+    document.getElementById('testBtn').addEventListener('click', async () => {
+      const resultDiv = document.getElementById('result');
+      resultDiv.textContent = 'Loading...';
+
+      try {
+        // Абсолютный URL
+        const url = window.location.origin + '/api/users';
+        console.log('Fetching:', url);
+
+        const response = await fetch(url);
+        const contentType = response.headers.get('content-type');
+
+        resultDiv.textContent = `URL: ${url}\nContent-Type: ${contentType}\n\n`;
+
+        const text = await response.text();
+
+        try {
+          // Пробуем распарсить как JSON
+          const json = JSON.parse(text);
+          resultDiv.textContent += `JSON Response:\n${JSON.stringify(json, null, 2)}`;
+        } catch (e) {
+          // Показываем первые 500 символов текста
+          resultDiv.textContent += `Text (first 500 chars):\n${text.substring(0, 500)}`;
+        }
+      } catch (error) {
+        resultDiv.textContent = `Error: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>

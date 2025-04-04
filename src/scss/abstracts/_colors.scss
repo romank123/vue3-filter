@@ -1,0 +1,34 @@
+$colors: (
+  primary: (
+    50: #f2e7fe,
+    100: #dbb2ff,
+    200: #bb86fc,
+    300: #985eff,
+    main: #6200ee,
+    variant: #410ac2,
+    400: #7f39fb,
+    500: #6200ee,
+    600: #5600e8,
+    700: #3700b3,
+    800: #30009c,
+    900: #23036a,
+    1000: #040452,
+  ),
+  font: (
+    primary: rgba(0, 0, 0, 0.87),
+    secondary: rgba(0, 0, 0, 0.8),
+  ),
+  neutral: (
+    background: #fff,
+    surface: #fff,
+  ),
+  on: (
+    primary-high: #fff,
+    primary-medium: rgba(255, 255, 255, 0.74),
+    primary-disabled: rgba(255, 255, 255, 0.38),
+    secondary: rgba(0, 0, 0, 0.87),
+    surface-high: rgba(0, 0, 0, 0.87),
+    surface-medium: rgba(0, 0, 0, 0.71),
+    surface-disabled: rgba(0, 0, 0, 0.38),
+  ),
+);

@@ -1,0 +1,281 @@
+@use '@/scss/colors.scss';
+@use '@/scss/mixins.scss';
+
+$font-family-fallback: 'Arial', sans-serif;
+$ff-medium: 'Gilroy-500', $font-family-fallback;
+$ff-semiBold: 'Gilroy-600', $font-family-fallback;
+
+.vue-slider.vue-slider-ltr {
+	position: absolute;
+	width: calc(100% - 24px * 2) !important;
+	bottom: -9px !important;
+	height: 2px !important;
+	box-shadow: none !important;
+	cursor: pointer;
+}
+
+/* component style */
+.vue-slider-disabled .vue-slider-process {
+	background-color: #a7a7a7;
+}
+.vue-slider-disabled .vue-slider-dot-handle {
+	border-color: #a7a7a7;
+	box-shadow: none !important;
+}
+.vue-slider-disabled .vue-slider-mark-step-active {
+	box-shadow: none !important;
+}
+
+/* rail style */
+.vue-slider-rail {
+	background-color: transparent;
+	border-radius: 15px;
+	height: 2px !important;
+	background-color: transparent;
+}
+
+/* process style */
+.vue-slider-process {
+	background-color: colors.$raphael;
+	border-radius: 15px;
+	transition: background-color 0.3s;
+}
+.vue-slider:hover .vue-slider-process {
+	background-color: colors.$raphael;
+}
+
+/* mark style */
+.vue-slider-mark-step {
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
+	box-shadow: 0 0 0 2px colors.$raphael;
+	background-color: colors.$aivazovsky;
+}
+.vue-slider-mark-step-active {
+	box-shadow: 0 0 0 2px colors.$raphael;
+}
+.vue-slider:hover .vue-slider-mark-step-active {
+	box-shadow: 0 0 0 2px colors.$raphael;
+}
+
+.vue-slider-mark-label {
+	font-size: 12px;
+	line-height: 16px;
+	white-space: nowrap;
+}
+/* dot style */
+.vue-slider-dot-handle {
+	cursor: pointer;
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
+	background-color: colors.$raphael;
+	border: 1px solid colors.$raphael;
+	box-sizing: border-box;
+	transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.vue-slider-dot-handle-focus {
+	border-color: colors.$raphael;
+}
+
+.vue-slider .vue-slider-dot-handle {
+	background: colors.$raphael;
+	border-color: colors.$raphael;
+	box-shadow: none !important;
+}
+.vue-slider-dot-handle:hover {
+	background: colors.$aivazovsky !important;
+}
+.vue-slider-dot-handle:active {
+	background: colors.$aivazovsky !important;
+}
+.vue-slider:hover .vue-slider-dot-handle:hover {
+	background: colors.$raphael;
+	border-color: colors.$raphael;
+}
+
+.vue-slider-dot-handle-disabled {
+	cursor: not-allowed;
+	border-color: #ddd !important;
+}
+
+.vue-slider-dot-tooltip {
+	opacity: 0;
+	visibility: hidden;
+	transition: all 0.3s;
+}
+.vue-slider-dot-tooltip-inner {
+	font-size: 14px;
+	line-height: 20px;
+	font-family: $ff-medium;
+	white-space: nowrap;
+	padding: 6px 8px;
+	color: #252628;
+	border-radius: 5px;
+	border-color: colors.$raphael;
+	background-color: colors.$raphael;
+	box-shadow: none;
+	transform: scale(0.9);
+	transition: transform 0.3s;
+}
+.vue-slider-dot-tooltip-inner::after {
+	content: '';
+	position: absolute;
+}
+.vue-slider-dot-tooltip-inner-top::after {
+	top: 100%;
+	left: 50%;
+	transform: translate(-50%, 0);
+	height: 0;
+	width: 0;
+	border-color: transparent;
+	border-style: solid;
+	border-width: 5px;
+	border-top-color: inherit;
+}
+.vue-slider-dot-tooltip-inner-bottom::after {
+	bottom: 100%;
+	left: 50%;
+	transform: translate(-50%, 0);
+	height: 0;
+	width: 0;
+	border-color: transparent;
+	border-style: solid;
+	border-width: 5px;
+	border-bottom-color: inherit;
+}
+.vue-slider-dot-tooltip-inner-left::after {
+	left: 100%;
+	top: 50%;
+	transform: translate(0, -50%);
+	height: 0;
+	width: 0;
+	border-color: transparent;
+	border-style: solid;
+	border-width: 5px;
+	border-left-color: inherit;
+}
+.vue-slider-dot-tooltip-inner-right::after {
+	right: 100%;
+	top: 50%;
+	transform: translate(0, -50%);
+	height: 0;
+	width: 0;
+	border-color: transparent;
+	border-style: solid;
+	border-width: 5px;
+	border-right-color: inherit;
+}
+.vue-slider-dot-tooltip-inner-top {
+	transform-origin: 50% 100%;
+}
+.vue-slider-dot-tooltip-inner-bottom {
+	transform-origin: 50% 0;
+}
+.vue-slider-dot-tooltip-inner-left {
+	transform-origin: 100% 50%;
+}
+.vue-slider-dot-tooltip-inner-right {
+	transform-origin: 0% 50%;
+}
+
+.vue-slider-dot:hover .vue-slider-dot-tooltip,
+.vue-slider-dot-tooltip-show {
+	opacity: 1;
+	visibility: visible;
+}
+.vue-slider-dot:hover .vue-slider-dot-tooltip .vue-slider-dot-tooltip-inner,
+.vue-slider-dot-tooltip-show .vue-slider-dot-tooltip-inner {
+	transform: scale(1);
+}
+
+.ds-range-slider {
+	position: relative;
+	display: flex;
+	padding: 12px 24px;
+	max-width: 348px;
+	border-radius: 100px;
+	border: 1px solid colors.$delacroix;
+	justify-content: space-between;
+	p {
+		display: flex;
+	}
+	&__label {
+		margin-bottom: 4px;
+	}
+	input {
+		outline: none;
+		border: none;
+		text-align: center;
+	}
+	&__info-container {
+		display: flex;
+		justify-content: space-between;
+		position: absolute;
+		bottom: -27px !important;
+		left: 0;
+		width: 100%;
+		p {
+			color: colors.$vinci;
+		}
+	}
+}
+
+.dark {
+	.ds-range-slider {
+		border-color: colors.$vinci;
+		transition: 0.35s;
+		&:hover {
+			border-color: colors.$aivazovsky;
+		}
+		&__label {
+			color: colors.$vinci;
+		}
+		&__input {
+			color: colors.$aivazovsky;
+			input {
+				color: colors.$aivazovsky;
+			}
+		}
+	}
+}
+.disabled {
+	.ds-range-slider {
+		background: colors.$magritte;
+		pointer-events: none;
+		.vue-slider-dot-handle,
+		.vue-slider-process {
+			background: colors.$delacroix;
+			border-color: colors.$delacroix;
+		}
+		&__label {
+			color: colors.$vinci;
+		}
+		&__input {
+			color: colors.$vinci;
+			input {
+				color: colors.$vinci;
+			}
+		}
+	}
+}
+.dark.disabled {
+	.ds-range-slider {
+		background: colors.$durer;
+		pointer-events: none;
+		border-color: colors.$vermeer;
+		.vue-slider-dot-handle,
+		.vue-slider-process {
+			background: colors.$vermeer;
+			border-color: colors.$vermeer;
+		}
+		&__input {
+			color: colors.$vinci;
+			input {
+				color: colors.$vinci;
+			}
+		}
+	}
+}

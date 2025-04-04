@@ -1,0 +1,78 @@
+{
+  "success": true,
+  "data": {
+    "status": {
+      "values": {
+        "published_bidding": "Объявленные",
+        "prepare_bidding": "Подготовка к торгам"
+      }
+    },
+    "search": [],
+    "subject_rf": {
+      "values": {
+        "75_168": "Забайкальский край",
+        "55_148": "Омская область"
+      },
+      "structure": {
+        "Сибирский ФО": {
+          "55_148": "Омская область"
+        },
+        "Дальневосточный ФО": {
+          "75_168": "Забайкальский край"
+        }
+      },
+      "url": {
+        "55_148": "omsk-region",
+        "75_168": "trans-baikal-territory"
+      }
+    },
+    "complex": {
+      "values": {
+        "535663": "Новый ЖК в Омске",
+        "535665": "Новый ЖК в Омске",
+        "535667": "Новый ЖК в Омске"
+      }
+    },
+    "planning-quarter": {
+      "values": []
+    },
+    "date-request-end": {
+      "from": {
+        "min": "30.04.2025",
+        "min_timestamp": 1745960400
+      },
+      "to": {
+        "max": "30.04.2025",
+        "max_timestamp": 1745960400
+      }
+    },
+    "square": {
+      "from": {
+        "min": "700"
+      },
+      "to": {
+        "max": "730"
+      }
+    },
+    "price": {
+      "from": {
+        "min": "1000200"
+      },
+      "to": {
+        "max": "2000000"
+      }
+    },
+    "fo": {
+      "values": {
+        "tsentralny-fo": "Центральный ФО",
+        "severo-zapadny-fo": "Северо-Западный ФО",
+        "yuzhny-fo": "Южный ФО",
+        "privolzhskiy-fo": "Приволжский ФО",
+        "uralskiy-fo": "Уральский ФО",
+        "sibirskiy-fo": "Сибирский ФО",
+        "dalnevostochny-fo": "Дальневосточный ФО",
+        "severo-kavkazskiy-fo": "Северо-Кавказский ФО"
+      }
+    }
+  }
+}

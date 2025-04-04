@@ -11,6 +11,7 @@
   "dependencies": {
     "@vuepic/vue-datepicker": "^8.6.0",
     "axios": "^1.8.4",
+    "pinia": "^3.0.1",
     "simplebar-vue": "^2.4.0",
     "vue": "^3.2.45",
     "vue-slider-component": "^4.1.0-beta.7"

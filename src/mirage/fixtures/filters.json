@@ -34,7 +34,7 @@
       }
     },
     "planning-quarter": {
-      "values": []
+      "values": ["Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023"]
     },
     "date-request-end": {
       "from": {

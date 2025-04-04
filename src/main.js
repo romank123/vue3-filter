@@ -1,6 +1,8 @@
 // src/main.js или src/main.ts
 import { createApp } from 'vue'
 import App from './App.vue'
+// Импортируем Pinia
+import { pinia } from './stores'
 // Импортируем функцию создания сервера
 import { makeServer } from './mirage/server'
 
@@ -11,5 +13,6 @@ if (
 ) {
   makeServer()
 }
-
-createApp(App).mount('#app')
+const app = createApp(App)
+app.use(pinia) // Используем Pinia
+app.mount('#app')

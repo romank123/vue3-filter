@@ -220,6 +220,7 @@ export const useFilterStore = defineStore('filters', {
     },
 
     applyFilters() {
+      console.log('tt', this)
       // Формируем параметры запроса
       const queryParams = {}
 

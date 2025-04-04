@@ -4,10 +4,12 @@ import Datepicker from './components/datepicker/Datepicker.vue'
 import RangeSlider from './components/range-slider/RangeSlider.vue'
 import CustomRangeSlider from './components/range-slider/CustomRangeSlider.vue'
 import ProductCatalog from './components/ProductCatalog.vue'
+import PropertyCatalog from './components/PropertyCatalog.vue'
 import { Button } from './components/button'
 import 'vue-slider-component/theme/antd.css'
 import { useFilterStore } from './stores/filterStore'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, computed } from 'vue'
+import axios from 'axios'
 
 export default {
   name: 'App',
@@ -17,14 +19,20 @@ export default {
     RangeSlider,
     CustomRangeSlider,
     ProductCatalog,
+    PropertyCatalog,
     Button,
   },
   setup() {
     const filterStore = useFilterStore()
+    const propertyCatalog = ref(null)
 
     // Локальные модели для слайдеров
     const squareValues = ref([0, 1000])
     const priceValues = ref([0, 2000000])
+
+    // Данные для каталога помещений
+    const catalogData = ref(null)
+    const isLoading = ref(false)
 
     // Загружаем данные фильтров при монтировании компонента
     onMounted(() => {
@@ -38,8 +46,40 @@ export default {
           filterStore.price.selected.min,
           filterStore.price.selected.max,
         ]
+
+        // Загружаем начальные данные каталога
+        loadCatalogData()
       })
     })
+
+    // Функция для загрузки данных каталога на основе фильтров
+    const loadCatalogData = async () => {
+      isLoading.value = true
+      catalogData.value = null // Сбрасываем предыдущие данные
+
+      try {
+        // Формируем параметры запроса из хранилища фильтров
+        const params = filterStore.applyFilters()
+
+        console.log('App - Загрузка данных каталога с параметрами:', params)
+
+        // Запрос к API
+        const response = await axios.get('/api/properties', { params })
+
+        // Проверяем успешность запроса
+        if (response.data && response.data.success) {
+          // Обновляем данные каталога
+          console.log('App - Данные каталога успешно загружены')
+          catalogData.value = response.data
+        } else {
+          console.error('App - Ошибка запроса каталога:', response)
+        }
+      } catch (error) {
+        console.error('App - Ошибка при загрузке каталога:', error)
+      } finally {
+        isLoading.value = false
+      }
+    }
 
     // Наблюдаем за изменениями в хранилище и обновляем локальные модели
     watch(
@@ -109,12 +149,35 @@ export default {
       }
     }
 
+    // Методы для управления фильтрами
+    const resetFilter = () => {
+      filterStore.resetFilters()
+      // При сбросе обновляем локальные модели
+      squareValues.value = [
+        filterStore.square.selected.min,
+        filterStore.square.selected.max,
+      ]
+      priceValues.value = [
+        filterStore.price.selected.min,
+        filterStore.price.selected.max,
+      ]
+    }
+
+    const applyFilter = () => {
+      // Применяем фильтры и загружаем новые данные
+      loadCatalogData()
+    }
+
     return {
       filterStore,
       squareValues,
       priceValues,
+      catalogData,
+      propertyCatalog,
       handleSquareChange,
       handlePriceChange,
+      resetFilter,
+      applyFilter,
     }
   },
 }
@@ -234,20 +297,12 @@ export default {
 
       <!-- Кнопки для управления фильтром -->
       <div class="filter-actions">
-        <Button
-          type="outline"
-          label="Сбросить"
-          @on-click="filterStore.resetFilters"
-        />
-        <Button
-          type="primary"
-          label="Применить"
-          @on-click="filterStore.applyFilters"
-        />
+        <Button type="outline" label="Сбросить" @on-click="resetFilter" />
+        <Button type="primary" label="Применить" @on-click="applyFilter" />
       </div>
     </div>
 
-    <!-- Индикатор загрузки -->
+    <!-- Индикатор загрузки фильтров -->
     <div v-else class="loading-container">Загрузка фильтров...</div>
 
     <!-- Вывод ошибки, если есть -->
@@ -255,7 +310,8 @@ export default {
       {{ filterStore.error }}
     </div>
 
-    <product-catalog></product-catalog>
+    <!-- Каталог помещений -->
+    <PropertyCatalog ref="propertyCatalog" :render-list="catalogData" />
   </main>
 
   <footer class="footer"></footer>

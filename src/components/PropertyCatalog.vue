@@ -97,7 +97,7 @@
     <div v-else class="property-catalog__grid">
       <PropertyCard
         v-for="(item, idx) in displayedItems"
-        :key="item.id"
+        :key="idx"
         :item="item"
         @click="openPropertyDetails(item)"
       />
@@ -229,7 +229,8 @@ export default {
       if (!filteredItems.value.length) return []
 
       const [field, direction] = sortBy.value.split('-')
-      const sorted = [...filteredItems.value].sort((a, b) => {
+      let sorted = []
+      sorted = [...filteredItems.value].sort((a, b) => {
         let valueA, valueB
 
         // Получаем значения в зависимости от поля сортировки
@@ -251,6 +252,44 @@ export default {
       })
 
       return sorted
+      //   if (!filteredItems.value.length) return []
+
+      //   const [field, direction] = sortBy.value.split('-')
+      //   let sorted = []
+      //   sorted = [...filteredItems.value].sort((a, b) => {
+      //     let valueA, valueB
+
+      //     // Получаем значения в зависимости от поля сортировки
+      //     if (field === 'price') {
+      //       // Убедимся, что это числа, удаляем все нечисловые символы
+      //       valueA =
+      //         parseFloat(String(a.props.price).replace(/[^\d.-]/g, '')) || 0
+      //       valueB =
+      //         parseFloat(String(b.props.price).replace(/[^\d.-]/g, '')) || 0
+      //     } else if (field === 'square') {
+      //       valueA =
+      //         parseFloat(String(a.props.square).replace(/[^\d.-]/g, '')) || 0
+      //       valueB =
+      //         parseFloat(String(b.props.square).replace(/[^\d.-]/g, '')) || 0
+      //     } else {
+      //       return 0
+      //     }
+
+      //     // Для отладки
+      //     console.log(
+      //       `Сравниваем: ${valueA} и ${valueB}, направление: ${direction}`
+      //     )
+
+      //     if (direction === 'asc') {
+      //       return valueA - valueB
+      //     } else {
+      //       return valueB - valueA
+      //     }
+      //   })
+
+      //   console.log('sorted', sorted)
+
+      //   return sorted
     })
 
     // Отображаемые элементы с учетом данных с сервера
@@ -366,6 +405,8 @@ export default {
         }
         return
       }
+
+      console.log('hello')
 
       // Если нет renderList и уже идет загрузка, не начинаем новый запрос
       if (isLoading.value) return
@@ -534,8 +575,8 @@ export default {
 
       // Устанавливаем новый таймер для дебаунса
       sortTimeoutId = setTimeout(() => {
-        console.log('PropertyCatalog - Применяем сортировку:', newValue)
         loadData()
+        console.log('PropertyCatalog - Применяем сортировку:', newValue)
       }, 300) // Задержка 300мс
     })
 

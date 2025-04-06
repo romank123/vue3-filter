@@ -257,9 +257,9 @@
   "nav": {
     "NavNum": 1,
     "NavPageSize": 12,
-    "NavPageCount": 1,
+    "NavPageCount": 10,
     "NavPageNomer": 1,
-    "NavRecordCount": 3
+    "NavRecordCount": 119
   },
   "meta": {
     "page": {

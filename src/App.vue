@@ -170,7 +170,7 @@
   <footer class="footer"></footer>
 </template>
 
-<script>
+<script setup>
 import MultiSelect from './components/multi-select/MultiSelect.vue'
 import Datepicker from './components/datepicker/Datepicker.vue'
 import RangeSlider from './components/range-slider/RangeSlider.vue'
@@ -183,250 +183,222 @@ import { useFilterStore } from './stores/filterStore'
 import { onMounted, ref, watch, computed } from 'vue'
 import axios from 'axios'
 
-export default {
-  name: 'App',
-  components: {
-    MultiSelect,
-    Datepicker,
-    RangeSlider,
-    CustomRangeSlider,
-    ProductCatalog,
-    PropertyCatalog,
-    Button,
-  },
-  setup() {
-    const filterStore = useFilterStore()
-    const propertyCatalog = ref(null)
+// Именование компонента не требуется в <script setup>
+// Все импортированные компоненты автоматически регистрируются в шаблоне
 
-    // Локальные модели для слайдеров
-    const squareValues = ref([0, 1000])
-    const priceValues = ref([0, 2000000])
-    const dateEndValue = ref(null)
+// Инициализируем хранилище фильтров
+const filterStore = useFilterStore()
+const propertyCatalog = ref(null)
 
-    // Данные для каталога помещений
-    const catalogData = ref(null)
-    const isLoading = ref(false)
+// Локальные модели для слайдеров
+const squareValues = ref([0, 1000])
+const priceValues = ref([0, 2000000])
+const dateEndValue = ref(null)
 
-    // Вычисляемые свойства для условного отображения компонентов
-    const showDatepicker = computed(() => {
-      return filterStore.selectedStatusTab === 'published_bidding'
-    })
+// Данные для каталога помещений
+const catalogData = ref(null)
+const isLoading = ref(false)
 
-    const showPlanningQuarter = computed(() => {
-      return (
-        filterStore.selectedStatusTab === 'all' ||
-        filterStore.selectedStatusTab === 'prepare_bidding'
-      )
-    })
+// Вычисляемые свойства для условного отображения компонентов
+const showDatepicker = computed(() => {
+  return filterStore.selectedStatusTab === 'published_bidding'
+})
 
-    const showPrice = computed(() => {
-      return (
-        filterStore.selectedStatusTab === 'all' ||
-        filterStore.selectedStatusTab === 'published_bidding'
-      )
-    })
+const showPlanningQuarter = computed(() => {
+  return (
+    filterStore.selectedStatusTab === 'all' ||
+    filterStore.selectedStatusTab === 'prepare_bidding'
+  )
+})
 
-    // Загружаем данные фильтров при монтировании компонента
-    onMounted(() => {
-      filterStore.fetchFilters().then(() => {
-        // Инициализация локальных моделей после загрузки данных
-        squareValues.value = [
-          filterStore.square.selected.min,
-          filterStore.square.selected.max,
-        ]
-        priceValues.value = [
-          filterStore.price.selected.min,
-          filterStore.price.selected.max,
-        ]
+const showPrice = computed(() => {
+  return (
+    filterStore.selectedStatusTab === 'all' ||
+    filterStore.selectedStatusTab === 'published_bidding'
+  )
+})
 
-        // Загружаем начальные данные каталога
-        loadCatalogData()
-      })
-    })
+// Функция для загрузки данных каталога на основе фильтров
+const loadCatalogData = async () => {
+  isLoading.value = true
+  catalogData.value = null // Сбрасываем предыдущие данные
 
-    // Функция для загрузки данных каталога на основе фильтров
-    const loadCatalogData = async () => {
-      isLoading.value = true
-      catalogData.value = null // Сбрасываем предыдущие данные
+  try {
+    // Формируем параметры запроса из хранилища фильтров
+    const params = filterStore.applyFilters()
 
-      try {
-        // Формируем параметры запроса из хранилища фильтров
-        const params = filterStore.applyFilters()
+    console.log('App - Загрузка данных каталога с параметрами:', params)
 
-        console.log('App - Загрузка данных каталога с параметрами:', params)
+    // Запрос к API
+    const response = await axios.get('/api/properties', { params })
 
-        // Запрос к API
-        const response = await axios.get('/api/properties', { params })
-
-        // Проверяем успешность запроса
-        if (response.data && response.data.success) {
-          // Обновляем данные каталога
-          console.log('App - Данные каталога успешно загружены')
-          catalogData.value = response.data
-        } else {
-          console.error('App - Ошибка запроса каталога:', response)
-        }
-      } catch (error) {
-        console.error('App - Ошибка при загрузке каталога:', error)
-      } finally {
-        isLoading.value = false
-      }
+    // Проверяем успешность запроса
+    if (response.data && response.data.success) {
+      // Обновляем данные каталога
+      console.log('App - Данные каталога успешно загружены')
+      catalogData.value = response.data
+    } else {
+      console.error('App - Ошибка запроса каталога:', response)
     }
-
-    // Наблюдаем за изменениями в хранилище и обновляем локальные модели
-    watch(
-      () => filterStore.square.selected,
-      newSelected => {
-        squareValues.value = [newSelected.min, newSelected.max]
-      },
-      { deep: true }
-    )
-
-    watch(
-      () => filterStore.price.selected,
-      newSelected => {
-        priceValues.value = [newSelected.min, newSelected.max]
-      },
-      { deep: true }
-    )
-
-    // Обработчики изменений для слайдеров
-    const handleSquareChange = values => {
-      if (!values || !Array.isArray(values) || values.length !== 2) return
-
-      const min = parseFloat(values[0])
-      const max = parseFloat(values[1])
-
-      if (!isNaN(min) && !isNaN(max)) {
-        console.log('App - handleSquareChange: получены значения', { min, max })
-
-        // Обновляем только выбранные значения, а не границы диапазона
-        filterStore.square.selected = {
-          min: min,
-          max: max,
-        }
-
-        // Синхронизируем локальные значения
-        squareValues.value = [min, max]
-
-        console.log(
-          'App - handleSquareChange: обновлены значения store',
-          filterStore.square.selected
-        )
-      }
-    }
-
-    const handlePriceChange = values => {
-      if (!values || !Array.isArray(values) || values.length !== 2) return
-
-      const min = parseInt(values[0])
-      const max = parseInt(values[1])
-
-      if (!isNaN(min) && !isNaN(max)) {
-        console.log('App - handlePriceChange: получены значения', { min, max })
-
-        // Обновляем только выбранные значения, а не границы диапазона
-        filterStore.price.selected = {
-          min: min,
-          max: max,
-        }
-
-        // Синхронизируем локальные значения
-        priceValues.value = [min, max]
-
-        console.log(
-          'App - handlePriceChange: обновлены значения store',
-          filterStore.price.selected
-        )
-      }
-    }
-
-    // Обработчик изменения даты
-    const handleDateChange = (dateRange, formattedDate) => {
-      console.log('App - handleDateChange:', dateRange, formattedDate)
-      filterStore.dateRequestEnd = dateRange
-      dateEndValue.value = dateRange
-    }
-
-    // Методы для управления фильтрами
-    const resetFilter = () => {
-      filterStore.resetFilters()
-
-      // При сбросе обновляем локальные модели
-      squareValues.value = [
-        filterStore.square.selected.min,
-        filterStore.square.selected.max,
-      ]
-      priceValues.value = [
-        filterStore.price.selected.min,
-        filterStore.price.selected.max,
-      ]
-      dateEndValue.value = null
-    }
-
-    const applyFilter = () => {
-      // Применяем фильтры и загружаем новые данные
-      loadCatalogData()
-    }
-
-    // Функция для изменения таба статуса
-    const setStatusTab = statusId => {
-      // Если выбран тот же таб, который уже активен, ничего не делаем
-      if (filterStore.selectedStatusTab === statusId) {
-        return
-      }
-
-      console.log(
-        `App - Смена статуса с "${filterStore.selectedStatusTab}" на "${statusId}"`
-      )
-
-      // Устанавливаем новый статус
-      filterStore.selectedStatusTab = statusId
-
-      // Сбрасываем значения в зависимости от выбранного таба
-      if (statusId === 'published_bidding') {
-        // Для "Объявленных" сбрасываем поле "Планируемый квартал"
-        filterStore.planningQuarter = []
-      } else if (statusId === 'prepare_bidding') {
-        // Для "Подготовка к торгам" сбрасываем дату окончания и цену
-        dateEndValue.value = null
-        filterStore.dateRequestEnd = null
-
-        // Сбрасываем значения цены до начальных
-        filterStore.price.selected = {
-          min: filterStore.price.min,
-          max: filterStore.price.max,
-        }
-        priceValues.value = [filterStore.price.min, filterStore.price.max]
-      } else if (statusId === 'all') {
-        // При переходе на "Все" сбрасываем datepicker
-        dateEndValue.value = null
-        filterStore.dateRequestEnd = null
-      }
-
-      // После изменения фильтра загружаем новые данные
-      loadCatalogData()
-    }
-
-    return {
-      filterStore,
-      squareValues,
-      priceValues,
-      dateEndValue,
-      catalogData,
-      propertyCatalog,
-      handleSquareChange,
-      handlePriceChange,
-      handleDateChange,
-      resetFilter,
-      applyFilter,
-      setStatusTab,
-      showDatepicker,
-      showPlanningQuarter,
-      showPrice,
-    }
-  },
+  } catch (error) {
+    console.error('App - Ошибка при загрузке каталога:', error)
+  } finally {
+    isLoading.value = false
+  }
 }
+
+// Обработчики изменений для слайдеров
+const handleSquareChange = values => {
+  if (!values || !Array.isArray(values) || values.length !== 2) return
+
+  const min = parseFloat(values[0])
+  const max = parseFloat(values[1])
+
+  if (!isNaN(min) && !isNaN(max)) {
+    console.log('App - handleSquareChange: получены значения', { min, max })
+
+    // Обновляем только выбранные значения, а не границы диапазона
+    filterStore.square.selected = {
+      min: min,
+      max: max,
+    }
+
+    // Синхронизируем локальные значения
+    squareValues.value = [min, max]
+
+    console.log(
+      'App - handleSquareChange: обновлены значения store',
+      filterStore.square.selected
+    )
+  }
+}
+
+const handlePriceChange = values => {
+  if (!values || !Array.isArray(values) || values.length !== 2) return
+
+  const min = parseInt(values[0])
+  const max = parseInt(values[1])
+
+  if (!isNaN(min) && !isNaN(max)) {
+    console.log('App - handlePriceChange: получены значения', { min, max })
+
+    // Обновляем только выбранные значения, а не границы диапазона
+    filterStore.price.selected = {
+      min: min,
+      max: max,
+    }
+
+    // Синхронизируем локальные значения
+    priceValues.value = [min, max]
+
+    console.log(
+      'App - handlePriceChange: обновлены значения store',
+      filterStore.price.selected
+    )
+  }
+}
+
+// Обработчик изменения даты
+const handleDateChange = (dateRange, formattedDate) => {
+  console.log('App - handleDateChange:', dateRange, formattedDate)
+  filterStore.dateRequestEnd = dateRange
+  dateEndValue.value = dateRange
+}
+
+// Методы для управления фильтрами
+const resetFilter = () => {
+  filterStore.resetFilters()
+
+  // При сбросе обновляем локальные модели
+  squareValues.value = [
+    filterStore.square.selected.min,
+    filterStore.square.selected.max,
+  ]
+  priceValues.value = [
+    filterStore.price.selected.min,
+    filterStore.price.selected.max,
+  ]
+  dateEndValue.value = null
+}
+
+const applyFilter = () => {
+  // Применяем фильтры и загружаем новые данные
+  loadCatalogData()
+}
+
+// Функция для изменения таба статуса
+const setStatusTab = statusId => {
+  // Если выбран тот же таб, который уже активен, ничего не делаем
+  if (filterStore.selectedStatusTab === statusId) {
+    return
+  }
+
+  console.log(
+    `App - Смена статуса с "${filterStore.selectedStatusTab}" на "${statusId}"`
+  )
+
+  // Устанавливаем новый статус
+  filterStore.selectedStatusTab = statusId
+
+  // Сбрасываем значения в зависимости от выбранного таба
+  if (statusId === 'published_bidding') {
+    // Для "Объявленных" сбрасываем поле "Планируемый квартал"
+    filterStore.planningQuarter = []
+  } else if (statusId === 'prepare_bidding') {
+    // Для "Подготовка к торгам" сбрасываем дату окончания и цену
+    dateEndValue.value = null
+    filterStore.dateRequestEnd = null
+
+    // Сбрасываем значения цены до начальных
+    filterStore.price.selected = {
+      min: filterStore.price.min,
+      max: filterStore.price.max,
+    }
+    priceValues.value = [filterStore.price.min, filterStore.price.max]
+  } else if (statusId === 'all') {
+    // При переходе на "Все" сбрасываем datepicker
+    dateEndValue.value = null
+    filterStore.dateRequestEnd = null
+  }
+
+  // После изменения фильтра загружаем новые данные
+  loadCatalogData()
+}
+
+// Загружаем данные фильтров при монтировании компонента
+onMounted(() => {
+  filterStore.fetchFilters().then(() => {
+    // Инициализация локальных моделей после загрузки данных
+    squareValues.value = [
+      filterStore.square.selected.min,
+      filterStore.square.selected.max,
+    ]
+    priceValues.value = [
+      filterStore.price.selected.min,
+      filterStore.price.selected.max,
+    ]
+
+    // Загружаем начальные данные каталога
+    loadCatalogData()
+  })
+})
+
+// Наблюдаем за изменениями в хранилище и обновляем локальные модели
+watch(
+  () => filterStore.square.selected,
+  newSelected => {
+    squareValues.value = [newSelected.min, newSelected.max]
+  },
+  { deep: true }
+)
+
+watch(
+  () => filterStore.price.selected,
+  newSelected => {
+    priceValues.value = [newSelected.min, newSelected.max]
+  },
+  { deep: true }
+)
 </script>
 
 <style lang="scss" scoped>

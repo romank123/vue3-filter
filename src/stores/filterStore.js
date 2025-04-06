@@ -12,6 +12,7 @@ export const useFilterStore = defineStore('filters', {
     subjectRf: [],
     project: [],
     planningQuarter: [],
+    selectedStatusTab: 'all', // Добавляем выбранный статус, по умолчанию "all" (все)
 
     // Диапазоны для фильтрации
     square: {
@@ -37,6 +38,7 @@ export const useFilterStore = defineStore('filters', {
     subjectOptions: [],
     projectOptions: [],
     planningQuarterOptions: [],
+    statusOptions: {}, // Добавляем опции статусов
   }),
 
   actions: {
@@ -47,6 +49,12 @@ export const useFilterStore = defineStore('filters', {
       try {
         const response = await axios.get('/api/filters')
         const { data } = response.data
+
+        // Загружаем данные статусов
+        if (data.status && data.status.values) {
+          this.statusOptions = data.status.values
+          console.log('FilterStore - Загружены статусы:', this.statusOptions)
+        }
 
         // Преобразовываем данные для subject_rf с учетом структуры (вложенность)
         if (data.subject_rf && data.subject_rf.structure) {
@@ -108,12 +116,23 @@ export const useFilterStore = defineStore('filters', {
 
         // Преобразовываем данные для planning-quarter
         if (data['planning-quarter'] && data['planning-quarter'].values) {
-          this.planningQuarterOptions = Object.entries(
-            data['planning-quarter'].values
-          ).map(([id, label]) => ({
-            id,
-            label,
-          }))
+          if (Array.isArray(data['planning-quarter'].values)) {
+            // Если values - это массив
+            this.planningQuarterOptions = data['planning-quarter'].values.map(
+              (value, index) => ({
+                id: `q${index + 1}`,
+                label: value,
+              })
+            )
+          } else {
+            // Если values - это объект
+            this.planningQuarterOptions = Object.entries(
+              data['planning-quarter'].values
+            ).map(([id, label]) => ({
+              id,
+              label,
+            }))
+          }
         }
 
         // Устанавливаем значения для square (интервал 0.1)
@@ -196,6 +215,7 @@ export const useFilterStore = defineStore('filters', {
       this.subjectRf = []
       this.project = []
       this.planningQuarter = []
+      this.selectedStatusTab = 'all' // Сбрасываем выбранный статус на "все"
 
       // Сбрасываем выбранные значения к исходным границам диапазона
       this.square.selected = {
@@ -220,7 +240,6 @@ export const useFilterStore = defineStore('filters', {
     },
 
     applyFilters() {
-      console.log('tt', this)
       // Формируем параметры запроса
       const queryParams = {}
 
@@ -233,6 +252,11 @@ export const useFilterStore = defineStore('filters', {
       const selectedRegions = this.getSelectedRegions()
       if (selectedRegions.length > 0) {
         queryParams.regions = selectedRegions.join(',')
+      }
+
+      // Добавляем фильтр по статусу, если выбран не "все"
+      if (this.selectedStatusTab !== 'all') {
+        queryParams.status = this.selectedStatusTab
       }
 
       // Добавляем проекты
@@ -265,10 +289,6 @@ export const useFilterStore = defineStore('filters', {
 
       // Метод для применения фильтров
       console.log('Применяем фильтры:', queryParams)
-
-      // Здесь можно добавить вызов API или другую логику
-      // Например:
-      // this.fetchFilteredData(queryParams);
 
       // Возвращаем параметры запроса для возможного использования
       return queryParams

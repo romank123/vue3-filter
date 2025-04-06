@@ -3,6 +3,12 @@
     <div class="property-catalog__header">
       <h2 class="property-catalog__title h2-semibold">
         {{ catalogTitle || 'Каталог помещений' }}
+        <span
+          v-if="statusFilter && statusFilter !== 'all'"
+          class="property-catalog__status-badge"
+        >
+          {{ statusName }}
+        </span>
       </h2>
 
       <div class="property-catalog__controls">
@@ -28,6 +34,24 @@
       </div>
     </div>
 
+    <!-- Табы для переключения между проектами и объектами -->
+    <div class="property-catalog__tabs">
+      <button
+        class="property-catalog__tab"
+        :class="{ active: catalogTabType === 'projects' }"
+        @click="setCatalogTabType('projects')"
+      >
+        Проекты
+      </button>
+      <button
+        class="property-catalog__tab"
+        :class="{ active: catalogTabType === 'objects' }"
+        @click="setCatalogTabType('objects')"
+      >
+        Объекты
+      </button>
+    </div>
+
     <!-- Индикатор загрузки -->
     <div v-if="isLoading" class="property-catalog__loading">
       <div class="property-catalog__loading-spinner"></div>
@@ -41,17 +65,19 @@
     </div>
 
     <!-- Пустой результат поиска -->
-    <div v-else-if="items.length === 0" class="property-catalog__empty">
+    <div v-else-if="filteredItems.length === 0" class="property-catalog__empty">
       <p class="p1-medium">
-        По заданным критериям не найдено ни одного помещения.
+        {{ emptyResultMessage }}
       </p>
-      <p class="p2-medium">Попробуйте изменить параметры фильтра.</p>
+      <p class="p2-medium">
+        Попробуйте изменить параметры фильтра или выбрать другой тип.
+      </p>
     </div>
 
     <!-- Список карточек -->
     <div v-else class="property-catalog__grid">
       <PropertyCard
-        v-for="item in sortedItems"
+        v-for="item in filteredSortedItems"
         :key="item.id"
         :item="item"
         @click="openPropertyDetails(item)"
@@ -109,6 +135,14 @@ export default {
       type: Object,
       default: null,
     },
+    statusFilter: {
+      type: String,
+      default: 'all',
+    },
+    statusOptions: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   setup(props) {
     const filterStore = useFilterStore()
@@ -121,17 +155,55 @@ export default {
     const totalItems = ref(0)
     const totalPages = ref(1)
     const catalogTitle = ref('')
+    const catalogTabType = ref('projects') // По умолчанию показываем проекты
 
     // Новые переменные для улучшенной обработки
     let sortTimeoutId = null // Для дебаунса изменения сортировки
     const isFirstLoad = ref(true) // Флаг первой загрузки
 
-    // Расчет сортированных элементов
-    const sortedItems = computed(() => {
+    // Вычисляемое свойство для отображения имени выбранного статуса
+    const statusName = computed(() => {
+      if (props.statusFilter === 'all') return ''
+      return props.statusOptions[props.statusFilter] || ''
+    })
+
+    // Получаем список ID проектов из хранилища фильтров
+    const projectIds = computed(() => {
+      if (!filterStore.projectOptions) return []
+      return filterStore.projectOptions.map(option => option.id)
+    })
+
+    // Фильтрация элементов в зависимости от выбранного таба
+    const filteredItems = computed(() => {
       if (!items.value.length) return []
 
+      if (catalogTabType.value === 'projects') {
+        // Показываем только проекты (те ID, которые есть в списке projectIds)
+        return items.value.filter(item => projectIds.value.includes(item.id))
+      } else if (catalogTabType.value === 'objects') {
+        // Показываем только объекты (те ID, которых нет в списке projectIds)
+        return items.value.filter(item => !projectIds.value.includes(item.id))
+      }
+
+      // Если тип не определен, возвращаем все элементы
+      return items.value
+    })
+
+    // Сообщение при пустом результате
+    const emptyResultMessage = computed(() => {
+      if (catalogTabType.value === 'projects') {
+        return 'В данный момент проектов не найдено.'
+      } else {
+        return 'В данный момент объектов не найдено.'
+      }
+    })
+
+    // Расчет сортированных элементов
+    const filteredSortedItems = computed(() => {
+      if (!filteredItems.value.length) return []
+
       const [field, direction] = sortBy.value.split('-')
-      const sorted = [...items.value].sort((a, b) => {
+      const sorted = [...filteredItems.value].sort((a, b) => {
         let valueA, valueB
 
         // Получаем значения в зависимости от поля сортировки
@@ -140,7 +212,7 @@ export default {
           valueB = parseFloat(b.props.price) || 0
         } else if (field === 'square') {
           valueA = parseFloat(a.props.square) || 0
-          valueB = parseFloat(b.props.square) || O
+          valueB = parseFloat(b.props.square) || 0
         } else {
           return 0
         }
@@ -187,6 +259,12 @@ export default {
 
       return pages
     })
+
+    // Изменение типа каталога (проекты или объекты)
+    const setCatalogTabType = type => {
+      console.log('PropertyCatalog - Изменение типа каталога:', type)
+      catalogTabType.value = type
+    }
 
     // Смена страницы
     const changePage = page => {
@@ -375,6 +453,18 @@ export default {
       }
     })
 
+    // Наблюдаем за изменениями статуса фильтра
+    watch(
+      () => props.statusFilter,
+      (newValue, oldValue) => {
+        console.log('PropertyCatalog - Изменение статуса фильтра:', {
+          oldValue,
+          newValue,
+        })
+        // При изменении статуса можно выполнять дополнительные действия, если нужно
+      }
+    )
+
     // Загружаем данные при монтировании компонента
     onMounted(() => {
       console.log(
@@ -402,7 +492,8 @@ export default {
 
     return {
       items,
-      sortedItems,
+      filteredItems,
+      filteredSortedItems,
       isLoading,
       error,
       sortBy,
@@ -411,10 +502,14 @@ export default {
       totalPages,
       paginationPages,
       catalogTitle,
+      catalogTabType,
+      emptyResultMessage,
       changePage,
       loadData,
       getItemsCountLabel,
       openPropertyDetails,
+      statusName,
+      setCatalogTabType,
     }
   },
 }
@@ -442,9 +537,29 @@ export default {
 
   &__title {
     margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
 
     @include mixins.mf-tablet {
       margin-bottom: 0;
+    }
+  }
+
+  &__status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background-color: colors.$boticelli;
+    color: colors.$aivazovsky;
+    font-size: 14px;
+    font-family: 'Gilroy-500';
+    vertical-align: middle;
+
+    @include mixins.mobile {
+      font-size: 12px;
+      padding: 3px 10px;
     }
   }
 
@@ -479,6 +594,37 @@ export default {
 
     &:focus {
       border-color: colors.$eyck;
+    }
+  }
+
+  &__tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  &__tab {
+    @extend .p1-medium;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background-color: colors.$aivazovsky;
+    border: 1px solid colors.$delacroix;
+    color: colors.$eyck;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: colors.$magritte;
+    }
+
+    &.active {
+      background-color: colors.$boticelli;
+      border-color: colors.$boticelli;
+      color: colors.$aivazovsky;
+    }
+
+    @include mixins.mobile {
+      padding: 8px 16px;
     }
   }
 

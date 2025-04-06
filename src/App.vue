@@ -168,6 +168,13 @@ export default {
       loadCatalogData()
     }
 
+    // Функция для изменения таба статуса
+    const setStatusTab = statusId => {
+      filterStore.selectedStatusTab = statusId
+      // После изменения фильтра загружаем новые данные
+      loadCatalogData()
+    }
+
     return {
       filterStore,
       squareValues,
@@ -178,6 +185,7 @@ export default {
       handlePriceChange,
       resetFilter,
       applyFilter,
+      setStatusTab,
     }
   },
 }
@@ -190,6 +198,26 @@ export default {
 
   <main>
     <div class="filter-title">Коммерческие помещения</div>
+
+    <!-- Табы фильтрации по статусу -->
+    <div class="status-tabs" v-if="!filterStore.isLoading">
+      <button
+        class="status-tab"
+        :class="{ active: filterStore.selectedStatusTab === 'all' }"
+        @click="setStatusTab('all')"
+      >
+        Все
+      </button>
+      <button
+        v-for="(label, id) in filterStore.statusOptions"
+        :key="id"
+        class="status-tab"
+        :class="{ active: filterStore.selectedStatusTab === id }"
+        @click="setStatusTab(id)"
+      >
+        {{ label }}
+      </button>
+    </div>
 
     <!-- Блок фильтра -->
     <div class="filter-container" v-if="!filterStore.isLoading">
@@ -235,6 +263,10 @@ export default {
 
       <!-- Вторая строка фильтра -->
       <div class="second-line">
+        <div class="date-picker" id="date-end">
+          <datepicker></datepicker>
+        </div>
+
         <!-- Планируемый квартал -->
         <label for="planning-quarter" class="filter-label">
           <p>Планируемый квартал</p>
@@ -311,7 +343,12 @@ export default {
     </div>
 
     <!-- Каталог помещений -->
-    <PropertyCatalog ref="propertyCatalog" :render-list="catalogData" />
+    <PropertyCatalog
+      ref="propertyCatalog"
+      :render-list="catalogData"
+      :status-filter="filterStore.selectedStatusTab"
+      :status-options="filterStore.statusOptions"
+    />
   </main>
 
   <footer class="footer"></footer>
@@ -333,11 +370,56 @@ main {
   margin-bottom: 24px;
 }
 
+.status-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  @include mixins.mobile {
+    gap: 8px;
+  }
+}
+
+.status-tab {
+  @extend .p1-medium;
+  padding: 8px 16px;
+  border-radius: 100px;
+  background-color: colors.$matisse;
+  border: 1px solid colors.$matisse;
+  color: colors.$eyck;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: colors.$magritte;
+    border-color: colors.$delacroix;
+  }
+
+  &.active {
+    background-color: colors.$boticelli;
+    border-color: colors.$boticelli;
+    color: colors.$aivazovsky;
+  }
+
+  @include mixins.mobile {
+    padding: 6px 12px;
+  }
+}
+
 .filter-container {
   background-color: colors.$picasso;
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 32px;
+}
+
+.date-picker {
+  width: 330px;
+
+  .ds-datepicker {
+    min-width: 180px;
+  }
 }
 
 .filter-label {

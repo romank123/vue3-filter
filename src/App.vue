@@ -1,3 +1,175 @@
+<template>
+  <header>
+    <div class="wrapper"></div>
+  </header>
+
+  <main>
+    <div class="filter-title">Коммерческие помещения</div>
+
+    <!-- Табы фильтрации по статусу -->
+    <div class="status-tabs" v-if="!filterStore.isLoading">
+      <button
+        class="status-tab"
+        :class="{ active: filterStore.selectedStatusTab === 'all' }"
+        @click="setStatusTab('all')"
+      >
+        Все
+      </button>
+      <button
+        v-for="(label, id) in filterStore.statusOptions"
+        :key="id"
+        class="status-tab"
+        :class="{ active: filterStore.selectedStatusTab === id }"
+        @click="setStatusTab(id)"
+      >
+        {{ label }}
+      </button>
+    </div>
+
+    <!-- Блок фильтра -->
+    <div class="filter-container" v-if="!filterStore.isLoading">
+      <!-- Первая строка фильтра -->
+      <div class="first-line">
+        <!-- Номер аукциона -->
+        <label for="auction-number" class="filter-label">
+          <p>Номер аукциона</p>
+          <input
+            id="auction-number"
+            type="text"
+            class="filter-input"
+            v-model="filterStore.auctionNumber"
+            placeholder="Введите номер"
+          />
+        </label>
+
+        <!-- Субъект РФ -->
+        <label for="subject-rf" class="filter-label">
+          <p>Субъект РФ</p>
+          <multi-select
+            id="subject-rf"
+            :options="filterStore.subjectOptions"
+            v-model="filterStore.subjectRf"
+            placeholder="Выберите субъект РФ"
+            :with-search="true"
+            :flat="false"
+          ></multi-select>
+        </label>
+
+        <!-- Проект -->
+        <label for="project" class="filter-label">
+          <p>Проект</p>
+          <multi-select
+            id="project"
+            :options="filterStore.projectOptions"
+            v-model="filterStore.project"
+            placeholder="Выберите проект"
+            :with-search="true"
+          ></multi-select>
+        </label>
+      </div>
+
+      <!-- Вторая строка фильтра -->
+      <div class="second-line">
+        <!-- Дата окончания (показывается только для "Объявленные" или "Все") -->
+        <div class="date-picker" id="date-end" v-if="showDatepicker">
+          <p class="filter-label">Дата окончания</p>
+          <datepicker
+            v-model="dateEndValue"
+            @change-date="handleDateChange"
+          ></datepicker>
+        </div>
+
+        <!-- Планируемый квартал (показывается только для "Подготовка к торгам" или "Все") -->
+        <label
+          for="planning-quarter"
+          class="filter-label"
+          v-if="showPlanningQuarter"
+        >
+          <p>Планируемый квартал</p>
+          <multi-select
+            id="planning-quarter"
+            :options="filterStore.planningQuarterOptions"
+            v-model="filterStore.planningQuarter"
+            placeholder="Выберите квартал"
+          ></multi-select>
+        </label>
+
+        <!-- Площадь -->
+        <div class="filter-range">
+          <label for="square" class="filter-label">
+            <p>Площадь</p>
+            <custom-range-slider
+              id="square"
+              label="Площадь"
+              :start-value="{
+                value: filterStore.square.min,
+                description: 'м²',
+              }"
+              :middle-value="{
+                value: (
+                  (filterStore.square.min + filterStore.square.max) /
+                  2
+                ).toFixed(1),
+                description: 'м²',
+              }"
+              :end-value="{ value: filterStore.square.max, description: 'м²' }"
+              :interval-value="0.1"
+              v-model="squareValues"
+              @change="handleSquareChange"
+            ></custom-range-slider>
+          </label>
+        </div>
+
+        <!-- Стоимость (показывается только для "Объявленные" или "Все") -->
+        <div class="filter-range" v-if="showPrice">
+          <label for="costs" class="filter-label">
+            <p>Стоимость</p>
+            <custom-range-slider
+              id="costs"
+              label="Стоимость"
+              :start-value="{ value: filterStore.price.min, description: '₽' }"
+              :middle-value="{
+                value: Math.floor(
+                  (filterStore.price.min + filterStore.price.max) / 2
+                ),
+                description: '₽',
+              }"
+              :end-value="{ value: filterStore.price.max, description: '₽' }"
+              :interval-value="100"
+              v-model="priceValues"
+              @change="handlePriceChange"
+            ></custom-range-slider>
+          </label>
+        </div>
+      </div>
+
+      <!-- Кнопки для управления фильтром -->
+      <div class="filter-actions">
+        <Button type="outline" label="Сбросить" @on-click="resetFilter" />
+        <Button type="primary" label="Применить" @on-click="applyFilter" />
+      </div>
+    </div>
+
+    <!-- Индикатор загрузки фильтров -->
+    <div v-else class="loading-container">Загрузка фильтров...</div>
+
+    <!-- Вывод ошибки, если есть -->
+    <div v-if="filterStore.error" class="error-container">
+      {{ filterStore.error }}
+    </div>
+
+    <!-- Каталог помещений -->
+    <PropertyCatalog
+      ref="propertyCatalog"
+      :render-list="catalogData"
+      :status-filter="filterStore.selectedStatusTab"
+      :status-options="filterStore.statusOptions"
+    />
+  </main>
+
+  <footer class="footer"></footer>
+</template>
+
 <script>
 import MultiSelect from './components/multi-select/MultiSelect.vue'
 import Datepicker from './components/datepicker/Datepicker.vue'
@@ -29,10 +201,30 @@ export default {
     // Локальные модели для слайдеров
     const squareValues = ref([0, 1000])
     const priceValues = ref([0, 2000000])
+    const dateEndValue = ref(null)
 
     // Данные для каталога помещений
     const catalogData = ref(null)
     const isLoading = ref(false)
+
+    // Вычисляемые свойства для условного отображения компонентов
+    const showDatepicker = computed(() => {
+      return filterStore.selectedStatusTab === 'published_bidding'
+    })
+
+    const showPlanningQuarter = computed(() => {
+      return (
+        filterStore.selectedStatusTab === 'all' ||
+        filterStore.selectedStatusTab === 'prepare_bidding'
+      )
+    })
+
+    const showPrice = computed(() => {
+      return (
+        filterStore.selectedStatusTab === 'all' ||
+        filterStore.selectedStatusTab === 'published_bidding'
+      )
+    })
 
     // Загружаем данные фильтров при монтировании компонента
     onMounted(() => {
@@ -149,9 +341,17 @@ export default {
       }
     }
 
+    // Обработчик изменения даты
+    const handleDateChange = (dateRange, formattedDate) => {
+      console.log('App - handleDateChange:', dateRange, formattedDate)
+      filterStore.dateRequestEnd = dateRange
+      dateEndValue.value = dateRange
+    }
+
     // Методы для управления фильтрами
     const resetFilter = () => {
       filterStore.resetFilters()
+
       // При сбросе обновляем локальные модели
       squareValues.value = [
         filterStore.square.selected.min,
@@ -161,6 +361,7 @@ export default {
         filterStore.price.selected.min,
         filterStore.price.selected.max,
       ]
+      dateEndValue.value = null
     }
 
     const applyFilter = () => {
@@ -170,7 +371,39 @@ export default {
 
     // Функция для изменения таба статуса
     const setStatusTab = statusId => {
+      // Если выбран тот же таб, который уже активен, ничего не делаем
+      if (filterStore.selectedStatusTab === statusId) {
+        return
+      }
+
+      console.log(
+        `App - Смена статуса с "${filterStore.selectedStatusTab}" на "${statusId}"`
+      )
+
+      // Устанавливаем новый статус
       filterStore.selectedStatusTab = statusId
+
+      // Сбрасываем значения в зависимости от выбранного таба
+      if (statusId === 'published_bidding') {
+        // Для "Объявленных" сбрасываем поле "Планируемый квартал"
+        filterStore.planningQuarter = []
+      } else if (statusId === 'prepare_bidding') {
+        // Для "Подготовка к торгам" сбрасываем дату окончания и цену
+        dateEndValue.value = null
+        filterStore.dateRequestEnd = null
+
+        // Сбрасываем значения цены до начальных
+        filterStore.price.selected = {
+          min: filterStore.price.min,
+          max: filterStore.price.max,
+        }
+        priceValues.value = [filterStore.price.min, filterStore.price.max]
+      } else if (statusId === 'all') {
+        // При переходе на "Все" сбрасываем datepicker
+        dateEndValue.value = null
+        filterStore.dateRequestEnd = null
+      }
+
       // После изменения фильтра загружаем новые данные
       loadCatalogData()
     }
@@ -179,180 +412,22 @@ export default {
       filterStore,
       squareValues,
       priceValues,
+      dateEndValue,
       catalogData,
       propertyCatalog,
       handleSquareChange,
       handlePriceChange,
+      handleDateChange,
       resetFilter,
       applyFilter,
       setStatusTab,
+      showDatepicker,
+      showPlanningQuarter,
+      showPrice,
     }
   },
 }
 </script>
-
-<template>
-  <header>
-    <div class="wrapper"></div>
-  </header>
-
-  <main>
-    <div class="filter-title">Коммерческие помещения</div>
-
-    <!-- Табы фильтрации по статусу -->
-    <div class="status-tabs" v-if="!filterStore.isLoading">
-      <button
-        class="status-tab"
-        :class="{ active: filterStore.selectedStatusTab === 'all' }"
-        @click="setStatusTab('all')"
-      >
-        Все
-      </button>
-      <button
-        v-for="(label, id) in filterStore.statusOptions"
-        :key="id"
-        class="status-tab"
-        :class="{ active: filterStore.selectedStatusTab === id }"
-        @click="setStatusTab(id)"
-      >
-        {{ label }}
-      </button>
-    </div>
-
-    <!-- Блок фильтра -->
-    <div class="filter-container" v-if="!filterStore.isLoading">
-      <!-- Первая строка фильтра -->
-      <div class="first-line">
-        <!-- Номер аукциона -->
-        <label for="auction-number" class="filter-label">
-          <p>Номер аукциона</p>
-          <input
-            id="auction-number"
-            type="text"
-            class="filter-input"
-            v-model="filterStore.auctionNumber"
-            placeholder="Введите номер"
-          />
-        </label>
-
-        <!-- Субъект РФ -->
-        <label for="subject-rf" class="filter-label">
-          <p>Субъект РФ</p>
-          <multi-select
-            id="subject-rf"
-            :options="filterStore.subjectOptions"
-            v-model="filterStore.subjectRf"
-            placeholder="Выберите субъект РФ"
-            :with-search="true"
-            :flat="false"
-          ></multi-select>
-        </label>
-
-        <!-- Проект -->
-        <label for="project" class="filter-label">
-          <p>Проект</p>
-          <multi-select
-            id="project"
-            :options="filterStore.projectOptions"
-            v-model="filterStore.project"
-            placeholder="Выберите проект"
-            :with-search="true"
-          ></multi-select>
-        </label>
-      </div>
-
-      <!-- Вторая строка фильтра -->
-      <div class="second-line">
-        <div class="date-picker" id="date-end">
-          <datepicker></datepicker>
-        </div>
-
-        <!-- Планируемый квартал -->
-        <label for="planning-quarter" class="filter-label">
-          <p>Планируемый квартал</p>
-          <multi-select
-            id="planning-quarter"
-            :options="filterStore.planningQuarterOptions"
-            v-model="filterStore.planningQuarter"
-            placeholder="Выберите квартал"
-          ></multi-select>
-        </label>
-
-        <!-- Площадь -->
-        <div class="filter-range">
-          <label for="square" class="filter-label">
-            <p>Площадь</p>
-            <custom-range-slider
-              id="square"
-              label="Площадь"
-              :start-value="{
-                value: filterStore.square.min,
-                description: 'м²',
-              }"
-              :middle-value="{
-                value: (
-                  (filterStore.square.min + filterStore.square.max) /
-                  2
-                ).toFixed(1),
-                description: 'м²',
-              }"
-              :end-value="{ value: filterStore.square.max, description: 'м²' }"
-              :interval-value="0.1"
-              v-model="squareValues"
-              @change="handleSquareChange"
-            ></custom-range-slider>
-          </label>
-        </div>
-
-        <!-- Стоимость -->
-        <div class="filter-range">
-          <label for="costs" class="filter-label">
-            <p>Стоимость</p>
-            <custom-range-slider
-              id="costs"
-              label="Стоимость"
-              :start-value="{ value: filterStore.price.min, description: '₽' }"
-              :middle-value="{
-                value: Math.floor(
-                  (filterStore.price.min + filterStore.price.max) / 2
-                ),
-                description: '₽',
-              }"
-              :end-value="{ value: filterStore.price.max, description: '₽' }"
-              :interval-value="100"
-              v-model="priceValues"
-              @change="handlePriceChange"
-            ></custom-range-slider>
-          </label>
-        </div>
-      </div>
-
-      <!-- Кнопки для управления фильтром -->
-      <div class="filter-actions">
-        <Button type="outline" label="Сбросить" @on-click="resetFilter" />
-        <Button type="primary" label="Применить" @on-click="applyFilter" />
-      </div>
-    </div>
-
-    <!-- Индикатор загрузки фильтров -->
-    <div v-else class="loading-container">Загрузка фильтров...</div>
-
-    <!-- Вывод ошибки, если есть -->
-    <div v-if="filterStore.error" class="error-container">
-      {{ filterStore.error }}
-    </div>
-
-    <!-- Каталог помещений -->
-    <PropertyCatalog
-      ref="propertyCatalog"
-      :render-list="catalogData"
-      :status-filter="filterStore.selectedStatusTab"
-      :status-options="filterStore.statusOptions"
-    />
-  </main>
-
-  <footer class="footer"></footer>
-</template>
 
 <style lang="scss" scoped>
 @use './scss/colors.scss';

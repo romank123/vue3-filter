@@ -12,7 +12,8 @@ export const useFilterStore = defineStore('filters', {
     subjectRf: [],
     project: [],
     planningQuarter: [],
-    selectedStatusTab: 'all', // Добавляем выбранный статус, по умолчанию "all" (все)
+    dateRequestEnd: null, // Добавляем поле для даты окончания
+    selectedStatusTab: 'all', // По умолчанию "all" (все)
 
     // Диапазоны для фильтрации
     square: {
@@ -38,7 +39,14 @@ export const useFilterStore = defineStore('filters', {
     subjectOptions: [],
     projectOptions: [],
     planningQuarterOptions: [],
-    statusOptions: {}, // Добавляем опции статусов
+    statusOptions: {}, // Опции статусов
+    pageSize: 12, // По умолчанию 12 элементов на странице
+    pageSizeOptions: [
+      { id: 12, label: '12' },
+      { id: 24, label: '24' },
+      { id: 48, label: '48' },
+      { id: 0, label: 'Все' },
+    ],
   }),
 
   actions: {
@@ -210,12 +218,14 @@ export const useFilterStore = defineStore('filters', {
       }
     },
 
+    // Полный сброс всех фильтров, кроме статуса
     resetFilters() {
       this.auctionNumber = ''
       this.subjectRf = []
       this.project = []
       this.planningQuarter = []
-      this.selectedStatusTab = 'all' // Сбрасываем выбранный статус на "все"
+      this.dateRequestEnd = null
+      // НЕ сбрасываем выбранный статус - selectedStatusTab
 
       // Сбрасываем выбранные значения к исходным границам диапазона
       this.square.selected = {
@@ -227,6 +237,8 @@ export const useFilterStore = defineStore('filters', {
         min: this.price.min,
         max: this.price.max,
       }
+
+      console.log('FilterStore - Фильтры сброшены')
     },
 
     // Вспомогательный метод для получения списка только регионов (без ФО)
@@ -239,6 +251,7 @@ export const useFilterStore = defineStore('filters', {
       return this.subjectRf.filter(id => !id.startsWith('fo_'))
     },
 
+    // Метод для применения фильтров и формирования параметров запроса
     applyFilters() {
       // Формируем параметры запроса
       const queryParams = {}
@@ -264,9 +277,26 @@ export const useFilterStore = defineStore('filters', {
         queryParams.projects = this.project.join(',')
       }
 
-      // Добавляем кварталы
-      if (this.planningQuarter.length > 0) {
+      // Добавляем планируемые кварталы, если это применимо к текущему выбранному статусу
+      if (
+        (this.selectedStatusTab === 'all' ||
+          this.selectedStatusTab === 'prepare_bidding') &&
+        this.planningQuarter.length > 0
+      ) {
         queryParams.quarters = this.planningQuarter.join(',')
+      }
+
+      // Добавляем дату окончания, если она установлена и применима к текущему статусу
+      if (
+        this.selectedStatusTab === 'published_bidding' &&
+        this.dateRequestEnd
+      ) {
+        if (this.dateRequestEnd.date_from) {
+          queryParams.date_request_end_from = this.dateRequestEnd.date_from
+        }
+        if (this.dateRequestEnd.date_to) {
+          queryParams.date_request_end_to = this.dateRequestEnd.date_to
+        }
       }
 
       // Добавляем параметры площади (используем выбранные значения, а не границы диапазона)
@@ -278,26 +308,46 @@ export const useFilterStore = defineStore('filters', {
         queryParams.square_max = this.square.selected.max
       }
 
-      // Добавляем параметры цены (используем выбранные значения, а не границы диапазона)
+      // Добавляем параметры цены, если это применимо к текущему выбранному статусу
       if (
-        this.price.selected.min !== this.price.min ||
-        this.price.selected.max !== this.price.max
+        (this.selectedStatusTab === 'all' ||
+          this.selectedStatusTab === 'published_bidding') &&
+        (this.price.selected.min !== this.price.min ||
+          this.price.selected.max !== this.price.max)
       ) {
         queryParams.price_min = this.price.selected.min
         queryParams.price_max = this.price.selected.max
       }
 
-      // Метод для применения фильтров
-      console.log('Применяем фильтры:', queryParams)
+      // Добавляем параметр количества элементов на странице (если не "Все")
+      if (this.pageSize > 0) {
+        queryParams.limit = this.pageSize
+      }
+
+      // Логгирование параметров запроса
+      console.log('FilterStore - Применяем фильтры:', queryParams)
 
       // Возвращаем параметры запроса для возможного использования
       return queryParams
     },
 
-    // Метод для получения данных с примененными фильтрами (будет реализован позже)
+    // Метод для получения данных с примененными фильтрами
     async fetchFilteredData(params) {
-      // TODO: Реализовать запрос к API
-      console.log('Будет выполнен запрос с параметрами:', params)
+      try {
+        const response = await axios.get('/api/properties', { params })
+        return response.data
+      } catch (error) {
+        console.error('Ошибка при загрузке данных:', error)
+        return { success: false, error: error.message }
+      }
+    },
+
+    // Добавим метод для изменения количества элементов на странице
+    setPageSize(size) {
+      this.pageSize = size
+      console.log(
+        `FilterStore - Установлено количество элементов на странице: ${size}`
+      )
     },
   },
 })

@@ -3,7 +3,7 @@
   "data": [
     {
       "id": "535668",
-      "name": "Пятерочка",
+      "name": "Пятерочка1",
       "url": "/commercial-premises/535668/",
       "picture": "/upload/resize_cache/iblock/suzf/premises/a7b/600_600_0/nsurp31tvkgs9sfi6kzcdrs9d50tfjr9.png",
       "props": {
@@ -17,7 +17,7 @@
     },
     {
       "id": "535664",
-      "name": "ОМск 1-ая улица",
+      "name": "Пятерочка2",
       "url": "/commercial-premises/535664/",
       "picture": "/upload/iblock/suzf/premises/146/pkpr9l1g6tfjo6ias9ebk8fqi2rl5tt8.jpg",
       "props": {
@@ -31,7 +31,7 @@
     },
     {
       "id": "535666",
-      "name": "ДС 1 к КОТ об увеличении срока аренды участка",
+      "name": "Пятерочка3",
       "url": "/commercial-premises/535666/",
       "picture": "/upload/resize_cache/iblock/suzf/premises/e26/600_600_0/ei7zlxlbdqmtv9in0ekg3s4quwote3u0.png",
       "props": {
@@ -39,6 +39,216 @@
         "date_request_end": "",
         "planning_quarter": "",
         "price": "1500000",
+        "bidding_number": "",
+        "square": "710"
+      }
+    },
+    {
+      "id": "535668",
+      "name": "Пятерочка4",
+      "url": "/commercial-premises/535668/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/a7b/600_600_0/nsurp31tvkgs9sfi6kzcdrs9d50tfjr9.png",
+      "props": {
+        "status": "Объявленный",
+        "date_request_end": "30.04.2025",
+        "planning_quarter": "",
+        "price": "1000200",
+        "bidding_number": "A23/322",
+        "square": "730"
+      }
+    },
+    {
+      "id": "535664",
+      "name": "Пятерочка5",
+      "url": "/commercial-premises/535664/",
+      "picture": "/upload/iblock/suzf/premises/146/pkpr9l1g6tfjo6ias9ebk8fqi2rl5tt8.jpg",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "2000000",
+        "bidding_number": "",
+        "square": "700"
+      }
+    },
+    {
+      "id": "535666",
+      "name": "Пятерочка6",
+      "url": "/commercial-premises/535666/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/e26/600_600_0/ei7zlxlbdqmtv9in0ekg3s4quwote3u0.png",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "1500000",
+        "bidding_number": "",
+        "square": "710"
+      }
+    },
+    {
+      "id": "535668",
+      "name": "Пятерочка7",
+      "url": "/commercial-premises/535668/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/a7b/600_600_0/nsurp31tvkgs9sfi6kzcdrs9d50tfjr9.png",
+      "props": {
+        "status": "Объявленный",
+        "date_request_end": "30.04.2025",
+        "planning_quarter": "",
+        "price": "1000200",
+        "bidding_number": "A23/322",
+        "square": "730"
+      }
+    },
+    {
+      "id": "535664",
+      "name": "Пятерочка8",
+      "url": "/commercial-premises/535664/",
+      "picture": "/upload/iblock/suzf/premises/146/pkpr9l1g6tfjo6ias9ebk8fqi2rl5tt8.jpg",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "2000000",
+        "bidding_number": "",
+        "square": "700"
+      }
+    },
+    {
+      "id": "535666",
+      "name": "Пятерочка9",
+      "url": "/commercial-premises/535666/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/e26/600_600_0/ei7zlxlbdqmtv9in0ekg3s4quwote3u0.png",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "1500000",
+        "bidding_number": "",
+        "square": "710"
+      }
+    },
+    {
+      "id": "535668",
+      "name": "Пятерочка10",
+      "url": "/commercial-premises/535668/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/a7b/600_600_0/nsurp31tvkgs9sfi6kzcdrs9d50tfjr9.png",
+      "props": {
+        "status": "Объявленный",
+        "date_request_end": "30.04.2025",
+        "planning_quarter": "",
+        "price": "1000200",
+        "bidding_number": "A23/322",
+        "square": "730"
+      }
+    },
+    {
+      "id": "535664",
+      "name": "Пятерочка11",
+      "url": "/commercial-premises/535664/",
+      "picture": "/upload/iblock/suzf/premises/146/pkpr9l1g6tfjo6ias9ebk8fqi2rl5tt8.jpg",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "2000000",
+        "bidding_number": "",
+        "square": "700"
+      }
+    },
+    {
+      "id": "535666",
+      "name": "Пятерочка12",
+      "url": "/commercial-premises/535666/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/e26/600_600_0/ei7zlxlbdqmtv9in0ekg3s4quwote3u0.png",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "1500000",
+        "bidding_number": "",
+        "square": "710"
+      }
+    },
+    {
+      "id": "535668",
+      "name": "Пятерочка13",
+      "url": "/commercial-premises/535668/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/a7b/600_600_0/nsurp31tvkgs9sfi6kzcdrs9d50tfjr9.png",
+      "props": {
+        "status": "Объявленный",
+        "date_request_end": "30.04.2025",
+        "planning_quarter": "",
+        "price": "1000200",
+        "bidding_number": "A23/322",
+        "square": "730"
+      }
+    },
+    {
+      "id": "535664",
+      "name": "Пятерочка14",
+      "url": "/commercial-premises/535664/",
+      "picture": "/upload/iblock/suzf/premises/146/pkpr9l1g6tfjo6ias9ebk8fqi2rl5tt8.jpg",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "2000000",
+        "bidding_number": "",
+        "square": "700"
+      }
+    },
+    {
+      "id": "535666",
+      "name": "Пятерочка15",
+      "url": "/commercial-premises/535666/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/e26/600_600_0/ei7zlxlbdqmtv9in0ekg3s4quwote3u0.png",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "1500000",
+        "bidding_number": "",
+        "square": "710"
+      }
+    },
+    {
+      "id": "535668",
+      "name": "Пятерочка16",
+      "url": "/commercial-premises/535668/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/a7b/600_600_0/nsurp31tvkgs9sfi6kzcdrs9d50tfjr9.png",
+      "props": {
+        "status": "Объявленный",
+        "date_request_end": "30.04.2025",
+        "planning_quarter": "",
+        "price": "1000200",
+        "bidding_number": "A23/322",
+        "square": "730"
+      }
+    },
+    {
+      "id": "535664",
+      "name": "Пятерочка17",
+      "url": "/commercial-premises/535664/",
+      "picture": "/upload/iblock/suzf/premises/146/pkpr9l1g6tfjo6ias9ebk8fqi2rl5tt8.jpg",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "20000",
+        "bidding_number": "",
+        "square": "700"
+      }
+    },
+    {
+      "id": "535666",
+      "name": "Пятерочка18",
+      "url": "/commercial-premises/535666/",
+      "picture": "/upload/resize_cache/iblock/suzf/premises/e26/600_600_0/ei7zlxlbdqmtv9in0ekg3s4quwote3u0.png",
+      "props": {
+        "status": "Подготовка к торгам",
+        "date_request_end": "",
+        "planning_quarter": "",
+        "price": "1500",
         "bidding_number": "",
         "square": "710"
       }

@@ -13,9 +13,28 @@
 
       <div class="property-catalog__controls">
         <div class="property-catalog__stats" v-if="totalItems > 0">
-          <span class="p2-medium"
-            >Найдено {{ totalItems }} {{ getItemsCountLabel(totalItems) }}</span
+          <span class="p2-medium">
+            Найдено {{ totalItems }} {{ getItemsCountLabel(totalItems) }}
+          </span>
+        </div>
+
+        <!-- Селектор количества элементов на странице -->
+        <div class="property-catalog__page-size">
+          <label for="page-size-select" class="p2-medium">Показывать по:</label>
+          <select
+            id="page-size-select"
+            v-model="selectedPageSize"
+            class="property-catalog__select"
+            @change="changePageSize"
           >
+            <option
+              v-for="option in pageSizeOptions"
+              :key="option.id"
+              :value="option.id"
+            >
+              {{ option.label }}
+            </option>
+          </select>
         </div>
 
         <div class="property-catalog__sort">
@@ -77,15 +96,18 @@
     <!-- Список карточек -->
     <div v-else class="property-catalog__grid">
       <PropertyCard
-        v-for="item in filteredSortedItems"
+        v-for="(item, idx) in displayedItems"
         :key="item.id"
         :item="item"
         @click="openPropertyDetails(item)"
       />
     </div>
 
-    <!-- Пагинация -->
-    <div v-if="totalPages > 1" class="property-catalog__pagination">
+    <!-- Пагинация - отображается только если не выбран режим "Все" и есть больше 1 страницы -->
+    <div
+      v-if="totalPages > 1 && selectedPageSize > 0"
+      class="property-catalog__pagination"
+    >
       <button
         class="pagination-btn"
         :disabled="currentPage === 1"
@@ -155,7 +177,11 @@ export default {
     const totalItems = ref(0)
     const totalPages = ref(1)
     const catalogTitle = ref('')
-    const catalogTabType = ref('projects') // По умолчанию показываем проекты
+    const catalogTabType = ref('objects') // По умолчанию показываем проекты
+
+    // Выбранное количество элементов на странице
+    const selectedPageSize = ref(filterStore.pageSize)
+    const pageSizeOptions = ref(filterStore.pageSizeOptions)
 
     // Новые переменные для улучшенной обработки
     let sortTimeoutId = null // Для дебаунса изменения сортировки
@@ -227,6 +253,16 @@ export default {
       return sorted
     })
 
+    // Отображаемые элементы с учетом данных с сервера
+    const displayedItems = computed(() => {
+      console.log(
+        'PropertyCatalog - Вычисление displayedItems, количество элементов:',
+        filteredSortedItems.value.length
+      )
+      // Отображаем отсортированные элементы
+      return filteredSortedItems.value
+    })
+
     // Определение страниц для пагинации
     const paginationPages = computed(() => {
       const pages = []
@@ -269,12 +305,31 @@ export default {
     // Смена страницы
     const changePage = page => {
       if (page < 1 || page > totalPages.value) return
+
+      console.log(
+        `PropertyCatalog - Смена страницы с ${currentPage.value} на ${page}`
+      )
       currentPage.value = page
 
-      // Если данные из API, загружаем новую страницу
-      if (!props.renderList) {
-        loadData()
-      }
+      // Загружаем данные новой страницы
+      loadData()
+    }
+
+    // Изменение количества элементов на странице
+    const changePageSize = () => {
+      console.log(
+        'PropertyCatalog - Изменение количества элементов на странице:',
+        selectedPageSize.value
+      )
+
+      // Обновляем в хранилище
+      filterStore.setPageSize(selectedPageSize.value)
+
+      // Сбрасываем номер страницы на первую
+      currentPage.value = 1
+
+      // Перезагружаем данные
+      loadData()
     }
 
     // Загрузка данных с API
@@ -286,13 +341,20 @@ export default {
         if (props.renderList.success && props.renderList.data) {
           items.value = props.renderList.data || []
 
-          // Обрабатываем навигацию
+          // Обрабатываем навигацию из renderList
           if (props.renderList.nav) {
-            totalItems.value =
-              props.renderList.nav.NavRecordCount || items.value.length
+            totalItems.value = props.renderList.nav.NavRecordCount || 0
             totalPages.value = props.renderList.nav.NavPageCount || 1
             currentPage.value = props.renderList.nav.NavPageNomer || 1
-            perPage.value = props.renderList.nav.NavPageSize || 12
+            perPage.value =
+              props.renderList.nav.NavPageSize || selectedPageSize.value
+
+            console.log('PropertyCatalog - Данные пагинации из renderList:', {
+              totalItems: totalItems.value,
+              totalPages: totalPages.value,
+              currentPage: currentPage.value,
+              perPage: perPage.value,
+            })
           }
 
           // Устанавливаем заголовок, если он есть
@@ -315,10 +377,16 @@ export default {
       try {
         // Формируем параметры запроса из хранилища фильтров
         const params = {
-          PAGEN_1: currentPage.value,
-          PAGE_ELEMENTS: perPage.value,
+          page: currentPage.value,
+          limit: selectedPageSize.value,
           sort: sortBy.value,
           ...filterStore.applyFilters(), // Получаем параметры фильтров
+        }
+
+        // Удаляем limit из параметров, если он дублируется
+        if ('limit' in params) {
+          delete params.limit
+          params.limit = selectedPageSize.value
         }
 
         console.log(
@@ -326,22 +394,46 @@ export default {
           params
         )
 
-        // В реальном приложении используйте реальный API-эндпоинт
+        // Запрос к API
         const response = await axios.get('/api/properties', { params })
 
         // Обрабатываем ответ
         if (response.data && response.data.success) {
           // Проверяем, нет ли renderList, который мог появиться во время запроса
           if (!props.renderList) {
+            // Устанавливаем данные
             items.value = response.data.data || []
+
+            console.log(
+              `PropertyCatalog - Получено ${items.value.length} элементов с сортировкой ${sortBy.value}`
+            )
 
             // Обрабатываем навигацию
             if (response.data.nav) {
-              totalItems.value =
-                response.data.nav.NavRecordCount || items.value.length
-              totalPages.value = response.data.nav.NavPageCount || 1
-              currentPage.value = response.data.nav.NavPageNomer || 1
-              perPage.value = response.data.nav.NavPageSize || 12
+              const nav = response.data.nav
+
+              // Устанавливаем значения пагинации из ответа API
+              totalItems.value = nav.NavRecordCount || 0
+              totalPages.value = nav.NavPageCount || 1
+              currentPage.value = nav.NavPageNomer || 1
+              perPage.value = nav.NavPageSize || selectedPageSize.value
+
+              console.log('PropertyCatalog - Данные пагинации из API:', {
+                totalItems: totalItems.value,
+                totalPages: totalPages.value,
+                currentPage: currentPage.value,
+                perPage: perPage.value,
+                pageSize: selectedPageSize.value,
+              })
+
+              // Проверяем соответствие выбранного размера страницы возвращаемому
+              if (
+                perPage.value !== selectedPageSize.value &&
+                selectedPageSize.value !== 0
+              ) {
+                console.warn(`PropertyCatalog - Размер страницы в ответе (${perPage.value})
+                    отличается от запрошенного (${selectedPageSize.value})`)
+              }
             }
 
             // Устанавливаем заголовок, если он есть
@@ -437,20 +529,14 @@ export default {
         oldValue,
       })
 
-      // Если данные загружаются из API, загружаем с новой сортировкой
-      if (!props.renderList) {
-        // Небольшая задержка, чтобы избежать слишком частых запросов
-        if (sortTimeoutId) clearTimeout(sortTimeoutId)
+      // Сбрасываем таймер, если он был установлен
+      if (sortTimeoutId) clearTimeout(sortTimeoutId)
 
-        sortTimeoutId = setTimeout(() => {
-          loadData()
-        }, 300) // Задержка 300мс
-      } else {
-        // Если данные из renderList, сортируем локально (уже реализовано через computed)
-        console.log(
-          'PropertyCatalog - Сортировка применена локально для renderList'
-        )
-      }
+      // Устанавливаем новый таймер для дебаунса
+      sortTimeoutId = setTimeout(() => {
+        console.log('PropertyCatalog - Применяем сортировку:', newValue)
+        loadData()
+      }, 300) // Задержка 300мс
     })
 
     // Наблюдаем за изменениями статуса фильтра
@@ -465,12 +551,23 @@ export default {
       }
     )
 
+    // Наблюдаем за изменениями в хранилище фильтров для обновления pageSize
+    watch(
+      () => filterStore.pageSize,
+      newValue => {
+        selectedPageSize.value = newValue
+      }
+    )
+
     // Загружаем данные при монтировании компонента
     onMounted(() => {
       console.log(
         'PropertyCatalog - Компонент смонтирован, renderList присутствует:',
         !!props.renderList
       )
+
+      // Синхронизируем selectedPageSize с хранилищем
+      selectedPageSize.value = filterStore.pageSize
 
       // Если при монтировании renderList отсутствует, загружаем данные с API
       if (!props.renderList) {
@@ -494,6 +591,7 @@ export default {
       items,
       filteredItems,
       filteredSortedItems,
+      displayedItems,
       isLoading,
       error,
       sortBy,
@@ -510,6 +608,9 @@ export default {
       openPropertyDetails,
       statusName,
       setCatalogTabType,
+      selectedPageSize,
+      pageSizeOptions,
+      changePageSize,
     }
   },
 }
@@ -578,7 +679,8 @@ export default {
     color: colors.$eyck;
   }
 
-  &__sort {
+  &__sort,
+  &__page-size {
     display: flex;
     align-items: center;
     gap: 8px;

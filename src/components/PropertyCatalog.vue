@@ -2,13 +2,13 @@
   <div class="property-catalog">
     <div class="property-catalog__header">
       <h2 class="property-catalog__title h2-semibold">
-        {{ catalogTitle || 'Каталог помещений' }}
-        <span
+        {{ catalogStore.catalogTitle || 'Каталог помещений' }}
+        <!-- <span
           v-if="statusFilter && statusFilter !== 'all'"
           class="property-catalog__status-badge"
         >
           {{ statusName }}
-        </span>
+        </span> -->
       </h2>
 
       <div class="property-catalog__controls">
@@ -28,7 +28,7 @@
             @change="changePageSize"
           >
             <option
-              v-for="option in pageSizeOptions"
+              v-for="option in catalogStore.pageSizeOptions"
               :key="option.id"
               :value="option.id"
             >
@@ -84,7 +84,10 @@
     </div>
 
     <!-- Пустой результат поиска -->
-    <div v-else-if="filteredItems.length === 0" class="property-catalog__empty">
+    <div
+      v-else-if="catalogStore.filteredItems.length === 0"
+      class="property-catalog__empty"
+    >
       <p class="p1-medium">
         {{ emptyResultMessage }}
       </p>
@@ -139,77 +142,98 @@
   </div>
 </template>
 
+<!-- propertyCatalog.vue -->
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { useFilterStore } from '@/stores/filterStore'
+import { computed, onMounted } from 'vue'
+import { useCatalogStore } from '@/stores/catalogStore'
+import { storeToRefs } from 'pinia'
 import { Button } from './button'
 import PropertyCard from './PropertyCard.vue'
-import axios from 'axios'
 
 // Определение Props
 const props = defineProps({
-  renderList: {
-    type: Object,
-    default: null,
-  },
-  statusFilter: {
-    type: String,
-    default: 'all',
-  },
-  statusOptions: {
-    type: Object,
-    default: () => ({}),
-  },
+  //   statusFilter: {
+  //     type: String,
+  //     default: 'all',
+  //   },
+  //   statusOptions: {
+  //     type: Object,
+  //     default: () => ({}),
+  //   },
 })
 
-// Инициализация хранилища и реактивных переменных
-const filterStore = useFilterStore()
-const items = ref([])
-const isLoading = ref(false)
-const error = ref(null)
-const sortBy = ref('price-asc')
-const currentPage = ref(1)
-const perPage = ref(12)
-const totalItems = ref(0)
-const totalPages = ref(1)
-const catalogTitle = ref('')
-const catalogTabType = ref('objects') // По умолчанию показываем объекты
+// Инициализация единого хранилища
+const catalogStore = useCatalogStore()
 
-// Выбранное количество элементов на странице
-const selectedPageSize = ref(filterStore.pageSize)
-const pageSizeOptions = ref(filterStore.pageSizeOptions)
+// Используем storeToRefs для сохранения реактивности
+const { filteredItems, filteredSortedItems } = storeToRefs(catalogStore)
 
-// Новые переменные для улучшенной обработки
-let sortTimeoutId = null // Для дебаунса изменения сортировки
-const isFirstLoad = ref(true) // Флаг первой загрузки
+console.log('filteredItems!!!!', filteredItems.value)
+
+// Получаем список ID проектов из хранилища
+const projectIds = computed(() => {
+  if (!catalogStore.projectOptions) return []
+  return catalogStore.projectOptions.map(option => option.id)
+})
+
+// Используем вычисляемые свойства для доступа к данным из хранилища
+const isLoading = computed(() => catalogStore.isLoading)
+const error = computed(() => catalogStore.error)
 
 // Вычисляемое свойство для отображения имени выбранного статуса
-const statusName = computed(() => {
-  if (props.statusFilter === 'all') return ''
-  return props.statusOptions[props.statusFilter] || ''
+// const statusName = computed(() => {
+//   if (props.statusFilter === 'all') return ''
+//   return props.statusOptions[props.statusFilter] || ''
+// })
+
+// Вычисляемые свойства для пагинации
+const currentPage = computed(() => catalogStore.pagination.currentPage)
+const totalPages = computed(() => catalogStore.pagination.totalPages)
+const totalItems = computed(() => catalogStore.pagination.totalItems)
+
+// Выбранное количество элементов на странице с двусторонней привязкой
+const selectedPageSize = computed({
+  get: () => catalogStore.pagination.perPage,
+  set: value => {
+    catalogStore.pagination.perPage = value
+    catalogStore.loadCatalogData()
+  },
 })
 
-// Получаем список ID проектов из хранилища фильтров
-const projectIds = computed(() => {
-  if (!filterStore.projectOptions) return []
-  return filterStore.projectOptions.map(option => option.id)
+// Обработка сортировки с двусторонней привязкой
+const sortBy = computed({
+  get: () => catalogStore.sortBy,
+  set: value => {
+    catalogStore.sortBy = value
+  },
+})
+
+// Тип каталога (объекты/проекты) с двусторонней привязкой
+const catalogTabType = computed({
+  get: () => catalogStore.catalogTabType,
+  set: value => {
+    catalogStore.catalogTabType = value
+  },
 })
 
 // Фильтрация элементов в зависимости от выбранного таба
-const filteredItems = computed(() => {
-  if (!items.value.length) return []
+// const filteredItems = computed(() => {
+//   console.log('h', catalogStore)
+//   if (!catalogStore.items.length) return []
 
-  if (catalogTabType.value === 'projects') {
-    // Показываем только проекты (те ID, которые есть в списке projectIds)
-    return items.value.filter(item => projectIds.value.includes(item.id))
-  } else if (catalogTabType.value === 'objects') {
-    // Показываем только объекты (те ID, которых нет в списке projectIds)
-    return items.value.filter(item => !projectIds.value.includes(item.id))
-  }
+//   if (catalogTabType.value === 'projects') {
+//     // Показываем только проекты (те ID, которые есть в списке projectIds)
+//     return catalogStore.items.filter(item => projectIds.value.includes(item.id))
+//   } else if (catalogTabType.value === 'objects') {
+//     // Показываем только объекты (те ID, которых нет в списке projectIds)
+//     return catalogStore.items.filter(
+//       item => !projectIds.value.includes(item.id)
+//     )
+//   }
 
-  // Если тип не определен, возвращаем все элементы
-  return items.value
-})
+//   // Если тип не определен, возвращаем все элементы
+//   return catalogStore.items
+// })
 
 // Сообщение при пустом результате
 const emptyResultMessage = computed(() => {
@@ -221,34 +245,34 @@ const emptyResultMessage = computed(() => {
 })
 
 // Расчет сортированных элементов
-const filteredSortedItems = computed(() => {
-  if (!filteredItems.value.length) return []
+// const filteredSortedItems = computed(() => {
+//   if (!filteredItems.value.length) return []
 
-  const [field, direction] = sortBy.value.split('-')
-  let sorted = []
-  sorted = [...filteredItems.value].sort((a, b) => {
-    let valueA, valueB
+//   const [field, direction] = sortBy.value.split('-')
+//   let sorted = []
+//   sorted = [...filteredItems.value].sort((a, b) => {
+//     let valueA, valueB
 
-    // Получаем значения в зависимости от поля сортировки
-    if (field === 'price') {
-      valueA = parseFloat(a.props.price) || 0
-      valueB = parseFloat(b.props.price) || 0
-    } else if (field === 'square') {
-      valueA = parseFloat(a.props.square) || 0
-      valueB = parseFloat(b.props.square) || 0
-    } else {
-      return 0
-    }
+//     // Получаем значения в зависимости от поля сортировки
+//     if (field === 'price') {
+//       valueA = parseFloat(a.props.price) || 0
+//       valueB = parseFloat(b.props.price) || 0
+//     } else if (field === 'square') {
+//       valueA = parseFloat(a.props.square) || 0
+//       valueB = parseFloat(b.props.square) || 0
+//     } else {
+//       return 0
+//     }
 
-    if (direction === 'asc') {
-      return valueA - valueB
-    } else {
-      return valueB - valueA
-    }
-  })
+//     if (direction === 'asc') {
+//       return valueA - valueB
+//     } else {
+//       return valueB - valueA
+//     }
+//   })
 
-  return sorted
-})
+//   return sorted
+// })
 
 // Отображаемые элементы с учетом данных с сервера
 const displayedItems = computed(() => {
@@ -293,7 +317,7 @@ const paginationPages = computed(() => {
 // Изменение типа каталога (проекты или объекты)
 const setCatalogTabType = type => {
   console.log('PropertyCatalog - Изменение типа каталога:', type)
-  catalogTabType.value = type
+  catalogStore.setCatalogTabType(type)
 }
 
 // Смена страницы
@@ -303,10 +327,7 @@ const changePage = page => {
   console.log(
     `PropertyCatalog - Смена страницы с ${currentPage.value} на ${page}`
   )
-  currentPage.value = page
-
-  // Загружаем данные новой страницы
-  loadData()
+  catalogStore.changePage(page)
 }
 
 // Изменение количества элементов на странице
@@ -316,149 +337,14 @@ const changePageSize = () => {
     selectedPageSize.value
   )
 
-  // Обновляем в хранилище
-  filterStore.setPageSize(selectedPageSize.value)
-
-  // Сбрасываем номер страницы на первую
-  currentPage.value = 1
-
-  // Перезагружаем данные
-  loadData()
+  //   catalogStore.setPageSize(selectedPageSize.value)
+  selectedPageSize.value
 }
 
-// Загрузка данных с API
-const loadData = async () => {
-  // Если есть renderList, используем его и не делаем запрос API
-  if (props.renderList) {
-    console.log('PropertyCatalog - Используем данные из renderList')
-
-    if (props.renderList.success && props.renderList.data) {
-      items.value = props.renderList.data || []
-
-      // Обрабатываем навигацию из renderList
-      if (props.renderList.nav) {
-        totalItems.value = props.renderList.nav.NavRecordCount || 0
-        totalPages.value = props.renderList.nav.NavPageCount || 1
-        currentPage.value = props.renderList.nav.NavPageNomer || 1
-        perPage.value =
-          props.renderList.nav.NavPageSize || selectedPageSize.value
-
-        console.log('PropertyCatalog - Данные пагинации из renderList:', {
-          totalItems: totalItems.value,
-          totalPages: totalPages.value,
-          currentPage: currentPage.value,
-          perPage: perPage.value,
-        })
-      }
-
-      // Устанавливаем заголовок, если он есть
-      if (props.renderList.meta && props.renderList.meta.content) {
-        catalogTitle.value = props.renderList.meta.content.title || ''
-      }
-    } else {
-      error.value = 'Ошибка в данных. Неверный формат списка.'
-    }
-    return
-  }
-
-  console.log('hello')
-
-  // Если нет renderList и уже идет загрузка, не начинаем новый запрос
-  if (isLoading.value) return
-
-  // Иначе, загружаем с API
-  isLoading.value = true
-  error.value = null
-
-  try {
-    // Формируем параметры запроса из хранилища фильтров
-    const params = {
-      page: currentPage.value,
-      limit: selectedPageSize.value,
-      sort: sortBy.value,
-      ...filterStore.applyFilters(), // Получаем параметры фильтров
-    }
-
-    // Удаляем limit из параметров, если он дублируется
-    if ('limit' in params) {
-      delete params.limit
-      params.limit = selectedPageSize.value
-    }
-
-    console.log(
-      'PropertyCatalog - Загрузка данных с API с параметрами:',
-      params
-    )
-
-    // Запрос к API
-    const response = await axios.get('/api/properties', { params })
-
-    // Обрабатываем ответ
-    if (response.data && response.data.success) {
-      // Проверяем, нет ли renderList, который мог появиться во время запроса
-      if (!props.renderList) {
-        // Устанавливаем данные
-        items.value = response.data.data || []
-
-        console.log(
-          `PropertyCatalog - Получено ${items.value.length} элементов с сортировкой ${sortBy.value}`
-        )
-
-        // Обрабатываем навигацию
-        if (response.data.nav) {
-          const nav = response.data.nav
-
-          // Устанавливаем значения пагинации из ответа API
-          totalItems.value = nav.NavRecordCount || 0
-          totalPages.value = nav.NavPageCount || 1
-          currentPage.value = nav.NavPageNomer || 1
-          perPage.value = nav.NavPageSize || selectedPageSize.value
-
-          console.log('PropertyCatalog - Данные пагинации из API:', {
-            totalItems: totalItems.value,
-            totalPages: totalPages.value,
-            currentPage: currentPage.value,
-            perPage: perPage.value,
-            pageSize: selectedPageSize.value,
-          })
-
-          // Проверяем соответствие выбранного размера страницы возвращаемому
-          if (
-            perPage.value !== selectedPageSize.value &&
-            selectedPageSize.value !== 0
-          ) {
-            console.warn(`PropertyCatalog - Размер страницы в ответе (${perPage.value})
-                  отличается от запрошенного (${selectedPageSize.value})`)
-          }
-        }
-
-        // Устанавливаем заголовок, если он есть
-        if (response.data.meta && response.data.meta.content) {
-          catalogTitle.value = response.data.meta.content.title || ''
-        }
-
-        console.log('PropertyCatalog - Данные успешно загружены с API')
-      } else {
-        console.log(
-          'PropertyCatalog - Появился renderList во время загрузки API, используем его'
-        )
-      }
-    } else {
-      if (!props.renderList) {
-        error.value =
-          'Произошла ошибка при загрузке данных. Неверный формат ответа.'
-      }
-    }
-  } catch (err) {
-    console.error('Ошибка при загрузке данных:', err)
-    // Проверяем, нет ли renderList, который мог появиться во время запроса
-    if (!props.renderList) {
-      error.value =
-        'Произошла ошибка при загрузке данных. Пожалуйста, попробуйте еще раз.'
-    }
-  } finally {
-    isLoading.value = false
-  }
+// Загрузка данных
+const loadData = () => {
+  console.log('PropertyCatalog - Загрузка данных с API')
+  catalogStore.loadCatalogData()
 }
 
 // Функция для правильного склонения слова "помещение"
@@ -487,100 +373,21 @@ const openPropertyDetails = item => {
   }
 }
 
-// Наблюдаем за изменениями в renderList
-watch(
-  () => props.renderList,
-  (newValue, oldValue) => {
-    console.log('PropertyCatalog - Обнаружено изменение в renderList', {
-      hasNewValue: !!newValue,
-      hasOldValue: !!oldValue,
-    })
-
-    if (newValue) {
-      // Если идет загрузка данных с API, отменяем ее в пользу renderList
-      if (isLoading.value) {
-        console.log(
-          'PropertyCatalog - Отменяем загрузку API в пользу renderList'
-        )
-        isLoading.value = false
-      }
-
-      // Применяем данные из renderList
-      loadData()
-    } else if (oldValue && !newValue) {
-      // Если renderList был, но исчез - запросим данные с API
-      console.log(
-        'PropertyCatalog - renderList был удален, загружаем данные с API'
-      )
-      loadData()
-    }
-  },
-  { deep: true, immediate: true }
-)
-
-// Наблюдаем за изменениями сортировки
-watch(sortBy, (newValue, oldValue) => {
-  console.log('PropertyCatalog - Изменение сортировки:', {
-    newValue,
-    oldValue,
-  })
-
-  // Сбрасываем таймер, если он был установлен
-  if (sortTimeoutId) clearTimeout(sortTimeoutId)
-
-  // Устанавливаем новый таймер для дебаунса
-  sortTimeoutId = setTimeout(() => {
-    loadData()
-    console.log('PropertyCatalog - Применяем сортировку:', newValue)
-  }, 300) // Задержка 300мс
-})
-
 // Наблюдаем за изменениями статуса фильтра
-watch(
-  () => props.statusFilter,
-  (newValue, oldValue) => {
-    console.log('PropertyCatalog - Изменение статуса фильтра:', {
-      oldValue,
-      newValue,
-    })
-    // При изменении статуса можно выполнять дополнительные действия, если нужно
-  }
-)
+// watch(
+//   () => props.statusFilter,
+//   (newValue, oldValue) => {
+//     console.log('PropertyCatalog - Изменение статуса фильтра:', {
+//       oldValue,
+//       newValue,
+//     })
+//     // При изменении статуса можно выполнять дополнительные действия, если нужно
+//   }
+// )
 
-// Наблюдаем за изменениями в хранилище фильтров для обновления pageSize
-watch(
-  () => filterStore.pageSize,
-  newValue => {
-    selectedPageSize.value = newValue
-  }
-)
-
-// Загружаем данные при монтировании компонента
+// Инициализация компонента
 onMounted(() => {
-  console.log(
-    'PropertyCatalog - Компонент смонтирован, renderList присутствует:',
-    !!props.renderList
-  )
-
-  // Синхронизируем selectedPageSize с хранилищем
-  selectedPageSize.value = filterStore.pageSize
-
-  // Если при монтировании renderList отсутствует, загружаем данные с API
-  if (!props.renderList) {
-    // Добавляем небольшую задержку, чтобы дать шанс renderList появиться
-    setTimeout(() => {
-      if (!props.renderList && isFirstLoad.value) {
-        console.log(
-          'PropertyCatalog - renderList не появился, загружаем данные с API'
-        )
-        loadData()
-        isFirstLoad.value = false
-      }
-    }, 50) // Небольшая задержка
-  } else {
-    // Если renderList уже есть, отмечаем что первая загрузка произошла
-    isFirstLoad.value = false
-  }
+  console.log('PropertyCatalog - Компонент смонтирован')
 })
 </script>
 

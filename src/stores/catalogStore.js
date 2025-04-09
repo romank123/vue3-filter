@@ -40,7 +40,7 @@ export const useCatalogStore = defineStore('catalog', {
     // Диапазоны для фильтрации
     square: {
       min: 0.01,
-      max: 1000000,
+      max: 999999999,
       // Выбранные пользователем значения
       selected: {
         min: 0,
@@ -49,7 +49,7 @@ export const useCatalogStore = defineStore('catalog', {
     },
     price: {
       min: 0.01,
-      max: 1000000,
+      max: 999999999,
       // Выбранные пользователем значения
       selected: {
         min: 0,

@@ -7,10 +7,10 @@
         <input
           id="first"
           :style="`width:${
-            String(firstInput) ? String(firstInput).length : 0
+            String(formattedFirstInput) ? String(formattedFirstInput).length : 0
           }ch`"
           ref="first"
-          v-model="firstInput"
+          v-model="formattedFirstInput"
           @input="onInputFilter($event, 'first')"
           @change="changeFirstInput"
           :size="firstSize"
@@ -26,32 +26,47 @@
         :interval="computedInterval"
         @change="changeSlider"
         v-model="internalValue"
+        :tooltip-formatter="formatTooltip"
       ></vue-slider>
 
       <p class="p1-semibold custom-range-slider__input">
         <span>До</span>
         <input
           :style="`width:${
-            String(secondInput) ? String(secondInput).length : 0
+            String(formattedSecondInput)
+              ? String(formattedSecondInput).length
+              : 0
           }ch`"
           @input="onInputFilter($event, 'second')"
           @change="changeSecondInput"
-          v-model="secondInput"
+          v-model="formattedSecondInput"
           ref="second"
         />
       </p>
       <div class="custom-range-slider__info-container">
         <p
           class="p3-medium"
-          v-html="startValue.value + ' ' + startValue.description"
+          v-html="
+            formatNumberWithDescription(
+              startValue.value,
+              startValue.description
+            )
+          "
         ></p>
         <p
           class="p3-medium"
-          v-html="middleValue.value + ' ' + middleValue.description"
+          v-html="
+            formatNumberWithDescription(
+              middleValue.value,
+              middleValue.description
+            )
+          "
         ></p>
         <p
           class="p3-medium"
-          v-html="endValue.value + ' ' + endValue.description"
+          v-html="
+            formatNumberWithDescription(endValue.value, endValue.description)
+          "
         ></p>
       </div>
     </div>
@@ -125,6 +140,11 @@ export default {
         return null
       },
     },
+    // Дополнительное свойство для настройки форматирования чисел
+    useThousandsSeparator: {
+      type: Boolean,
+      default: true,
+    },
   },
   data() {
     // Преобразуем начальные значения в правильный тип данных
@@ -184,6 +204,27 @@ export default {
 
       return this.intervalValue
     },
+
+    // Форматированные значения для отображения в инпутах
+    formattedFirstInput: {
+      get() {
+        return this.formatNumber(this.firstInput)
+      },
+      set(value) {
+        // При установке значения убираем разделители тысяч
+        this.firstInput = this.unformatNumber(value)
+      },
+    },
+
+    formattedSecondInput: {
+      get() {
+        return this.formatNumber(this.secondInput)
+      },
+      set(value) {
+        // При установке значения убираем разделители тысяч
+        this.secondInput = this.unformatNumber(value)
+      },
+    },
   },
   watch: {
     // Следим за изменениями modelValue
@@ -231,14 +272,14 @@ export default {
       deep: true,
     },
     firstInput(newVal) {
-      this.firstSize = this.firstInput
-        ? String(this.firstInput).length
-        : String(this.startValue.value).length
+      this.firstSize = this.formattedFirstInput
+        ? String(this.formattedFirstInput).length
+        : String(this.formatNumber(this.startValue.value)).length
     },
     secondInput(newVal) {
-      this.secondSize = this.secondInput
-        ? String(this.secondInput).length
-        : String(this.endValue.value).length
+      this.secondSize = this.formattedSecondInput
+        ? String(this.formattedSecondInput).length
+        : String(this.formatNumber(this.endValue.value)).length
     },
   },
   mounted() {
@@ -250,33 +291,77 @@ export default {
     })
   },
   methods: {
-    // Новый метод для фильтрации ввода - только цифры, точка и запятая
+    // Форматирование числа с разделителями тысяч
+    formatNumber(value) {
+      if (value === null || value === undefined || isNaN(value)) {
+        return ''
+      }
+
+      if (!this.useThousandsSeparator) {
+        return String(value)
+      }
+
+      // Определяем, есть ли у числа дробная часть
+      const parts = String(value).split('.')
+
+      // Форматируем целую часть с разделителями тысяч
+      let integerPart = parts[0]
+      const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+
+      // Если есть дробная часть, добавляем её
+      if (parts.length > 1) {
+        return formattedInteger + '.' + parts[1]
+      }
+
+      return formattedInteger
+    },
+
+    // Удаление разделителей тысяч из строки
+    unformatNumber(value) {
+      if (!value) return ''
+
+      // Удаляем все пробелы, используемые как разделители тысяч
+      const unformattedValue = String(value).replace(/\s/g, '')
+
+      // Заменяем запятую на точку (если пользователь ввел запятую)
+      return unformattedValue.replace(',', '.')
+    },
+
+    // Форматирование числа и описания для отображения в подписях
+    formatNumberWithDescription(value, description) {
+      return this.formatNumber(value) + ' ' + description
+    },
+
+    // Форматирование всплывающих подсказок слайдера
+    formatTooltip(value) {
+      return this.formatNumber(value)
+    },
+
+    // Новый метод для фильтрации ввода - только цифры, точка, запятая и пробелы
     onInputFilter(event, inputType) {
-      // Разрешаем только цифры, точку и запятую
+      // Получаем текущее значение ввода
       const input = event.target
       const value = input.value
 
       // Заменяем запятую на точку для корректной работы с числами
       if (value.includes(',')) {
-        input.value = value.replace(',', '.')
+        const replacedValue = value.replace(',', '.')
 
         if (inputType === 'first') {
-          this.firstInput = input.value
+          this.formattedFirstInput = replacedValue
         } else {
-          this.secondInput = input.value
+          this.formattedSecondInput = replacedValue
         }
       }
 
-      // Фильтруем недопустимые символы
-      const filteredValue = value.replace(/[^0-9.,]/g, '')
+      // Фильтруем недопустимые символы (разрешаем цифры, точку, запятую и пробел)
+      const filteredValue = value.replace(/[^0-9., ]/g, '')
 
       if (value !== filteredValue) {
-        input.value = filteredValue
-
         if (inputType === 'first') {
-          this.firstInput = filteredValue
+          this.formattedFirstInput = filteredValue
         } else {
-          this.secondInput = filteredValue
+          this.formattedSecondInput = filteredValue
         }
       }
     },
@@ -344,7 +429,9 @@ export default {
     changeFirstInput() {
       if (!this.$refs.slider) return
 
-      let newMin = parseFloat(this.firstInput)
+      // Удаляем разделители тысяч перед парсингом
+      const cleanValue = this.unformatNumber(this.formattedFirstInput)
+      let newMin = parseFloat(cleanValue)
 
       if (isNaN(newMin)) newMin = parseFloat(this.startValue.value)
 
@@ -374,7 +461,10 @@ export default {
     changeSecondInput() {
       if (!this.$refs.slider) return
 
-      let newMax = parseFloat(this.secondInput)
+      // Удаляем разделители тысяч перед парсингом
+      const cleanValue = this.unformatNumber(this.formattedSecondInput)
+      let newMax = parseFloat(cleanValue)
+
       if (isNaN(newMax)) newMax = parseFloat(this.endValue.value)
 
       const newValues = [...this.internalValue]

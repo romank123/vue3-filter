@@ -61,10 +61,10 @@ export const initialFilters = {
     },
     square: {
       from: {
-        min: 70.45,
+        min: '70.45',
       },
       to: {
-        max: 1001,
+        max: '1001',
       },
     },
     price: {
@@ -72,7 +72,7 @@ export const initialFilters = {
         min: '99',
       },
       to: {
-        max: '999999999',
+        max: '50000000',
       },
     },
     fo: {

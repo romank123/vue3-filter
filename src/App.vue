@@ -107,14 +107,11 @@
                 description: 'м²',
               }"
               :middle-value="{
-                value: (
-                  (catalogStore.square.min + catalogStore.square.max) /
-                  2
-                ).toFixed(1),
+                value: (catalogStore.square.min + catalogStore.square.max) / 2,
                 description: 'м²',
               }"
               :end-value="{ value: catalogStore.square.max, description: 'м²' }"
-              :interval-value="0.1"
+              :interval-value="1"
               v-model="squareValues"
               @change="handleSquareChange"
             ></custom-range-slider>
@@ -130,13 +127,14 @@
               label="Стоимость"
               :start-value="{ value: catalogStore.price.min, description: '₽' }"
               :middle-value="{
-                value: Math.floor(
-                  (catalogStore.price.min + catalogStore.price.max) / 2
-                ),
+                value: (
+                  (catalogStore.price.min + catalogStore.price.max) /
+                  2
+                ).toFixed(1),
                 description: '₽',
               }"
               :end-value="{ value: catalogStore.price.max, description: '₽' }"
-              :interval-value="100"
+              :interval-value="1"
               v-model="priceValues"
               @change="handlePriceChange"
             ></custom-range-slider>
@@ -174,7 +172,22 @@ import PropertyCatalog from './components/PropertyCatalog.vue'
 import { Button } from './components/button'
 import 'vue-slider-component/theme/antd.css'
 import { useCatalogStore } from './stores/catalogStore'
-import { onMounted, ref, watch, computed } from 'vue'
+import { onMounted, ref, watch, computed, defineProps } from 'vue'
+import { initialFilters, initialRenderList } from './initialData'
+
+// Определяем пропсы для компонента App
+// const props = defineProps({
+//   // Начальные параметры для фильтра
+//   initialFilters: {
+//     type: Object,
+//     default: () => null,
+//   },
+//   // Начальный список элементов для отображения
+//   initialRenderList: {
+//     type: Object,
+//     default: () => null,
+//   },
+// })
 
 // Инициализируем единое хранилище
 const catalogStore = useCatalogStore()
@@ -187,7 +200,10 @@ const dateEndValue = ref(null)
 
 // Вычисляемые свойства для условного отображения компонентов
 const showDatepicker = computed(() => {
-  return catalogStore.selectedStatusTab === 'published_bidding'
+  return (
+    catalogStore.selectedStatusTab === 'all' ||
+    catalogStore.selectedStatusTab === 'published_bidding'
+  )
 })
 
 const showPlanningQuarter = computed(() => {
@@ -280,6 +296,7 @@ const resetFilter = () => {
 
 const applyFilter = () => {
   // Применяем фильтры и загружаем новые данные
+  catalogStore.useApiData = true // Устанавливаем флаг для использования API
   catalogStore.loadCatalogData()
 }
 
@@ -288,19 +305,58 @@ const setStatusTab = statusId => {
   catalogStore.setStatusTab(statusId)
 }
 
+// Флаг для отслеживания первой загрузки
+const isFirstLoad = ref(true)
+
 // Загружаем данные фильтров при монтировании компонента
 onMounted(() => {
-  catalogStore.fetchFilters().then(() => {
-    // Инициализация локальных моделей после загрузки данных
-    squareValues.value = [
-      catalogStore.square.selected.min,
-      catalogStore.square.selected.max,
-    ]
-    priceValues.value = [
-      catalogStore.price.selected.min,
-      catalogStore.price.selected.max,
-    ]
-  })
+  // Проверяем, есть ли начальные данные фильтров в пропсах
+  // if (props.initialFilters && isFirstLoad.value) {
+  // console.log('App - Инициализация из initialFilters:', props.initialFilters)
+  // Инициализируем хранилище начальными данными из пропсов
+  // catalogStore.initializeFromProps(
+  //     props.initialFilters,
+  //     props.initialRenderList
+  //   )
+
+  // Проверяем, есть ли начальные данные
+  if (initialFilters && initialRenderList && isFirstLoad.value) {
+    console.log('App - Инициализация из initialFilters:', initialFilters)
+
+    // Инициализируем хранилище начальными данными
+    catalogStore.initializeFromProps(initialFilters, initialRenderList)
+
+    // Синхронизируем локальные модели
+    // if (catalogStore.square.selected) {
+    //   squareValues.value = [
+    //     catalogStore.square.selected.min,
+    //     catalogStore.square.selected.max,
+    //   ]
+    // }
+
+    // if (catalogStore.price.selected) {
+    //   priceValues.value = [
+    //     catalogStore.price.selected.min,
+    //     catalogStore.price.selected.max,
+    //   ]
+    // }
+
+    isFirstLoad.value = false
+  } else {
+    console.log('fetch')
+    // Если нет пропсов, загружаем данные через API
+    catalogStore.fetchFilters().then(() => {
+      // Инициализация локальных моделей после загрузки данных
+      squareValues.value = [
+        catalogStore.square.selected.min,
+        catalogStore.square.selected.max,
+      ]
+      priceValues.value = [
+        catalogStore.price.selected.min,
+        catalogStore.price.selected.max,
+      ]
+    })
+  }
 })
 
 // Наблюдаем за изменениями в хранилище и обновляем локальные модели

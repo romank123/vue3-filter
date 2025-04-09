@@ -4,6 +4,9 @@ import axios from 'axios'
 
 export const useCatalogStore = defineStore('catalog', {
   state: () => ({
+    // Флаг для определения источника данных (пропсы или API)
+    useApiData: false,
+
     // Состояние загрузки
     isLoading: false,
     error: null,
@@ -36,21 +39,21 @@ export const useCatalogStore = defineStore('catalog', {
 
     // Диапазоны для фильтрации
     square: {
-      min: 0,
-      max: 1000,
+      min: 0.01,
+      max: 1000000,
       // Выбранные пользователем значения
       selected: {
         min: 0,
-        max: 1000,
+        max: 1,
       },
     },
     price: {
-      min: 0,
-      max: 2000000,
+      min: 0.01,
+      max: 1000000,
       // Выбранные пользователем значения
       selected: {
         min: 0,
-        max: 2000000,
+        max: 1,
       },
     },
 
@@ -59,6 +62,9 @@ export const useCatalogStore = defineStore('catalog', {
     projectOptions: [],
     planningQuarterOptions: [],
     statusOptions: {}, // Опции статусов
+
+    // Хранение начального списка элементов из пропсов
+    initialRenderList: null,
   }),
 
   getters: {
@@ -107,16 +113,164 @@ export const useCatalogStore = defineStore('catalog', {
         }
       })
 
-      console.log('sorted', sorted)
-
       return sorted
     },
   },
 
   actions: {
-    // --- Действия для фильтров ---
+    // --- Новое действие для инициализации из пропсов ---
+    initializeFromProps(initialFilters, initialRenderList) {
+      console.log('CatalogStore - Инициализация из пропсов', {
+        initialFilters,
+        initialRenderList,
+      })
 
+      this.useApiData = false // Устанавливаем флаг использования данных из пропсов
+
+      // Сохраняем начальный список элементов
+      this.initialRenderList = initialRenderList
+
+      if (initialRenderList) {
+        // Устанавливаем данные для отображения
+        this.items = initialRenderList.data || []
+
+        // Обрабатываем навигацию
+        if (initialRenderList.nav) {
+          this.pagination.currentPage = initialRenderList.nav.NavPageNomer || 1
+          this.pagination.totalPages = initialRenderList.nav.NavPageCount || 1
+          this.pagination.totalItems = initialRenderList.nav.NavRecordCount || 0
+          this.pagination.perPage =
+            initialRenderList.nav.NavPageSize || this.pagination.perPage
+        }
+
+        // Устанавливаем заголовок, если он есть
+        if (initialRenderList.meta && initialRenderList.meta.content) {
+          this.catalogTitle = initialRenderList.meta.content.title || ''
+        }
+      }
+
+      if (initialFilters && initialFilters.data) {
+        const data = initialFilters.data
+
+        // Загружаем данные статусов
+        if (data.status && data.status.values) {
+          this.statusOptions = data.status.values
+        }
+
+        // Преобразовываем данные для subject_rf с учетом структуры
+        if (data.subject_rf && data.subject_rf.structure) {
+          this.subjectOptions = []
+
+          // Перебираем федеральные округа и создаём иерархическую структуру
+          Object.entries(data.subject_rf.structure).forEach(
+            ([foName, regions]) => {
+              const foItem = {
+                id: `fo_${foName}`,
+                label: foName,
+                children: [],
+              }
+
+              // Добавляем регионы как дочерние элементы
+              Object.entries(regions).forEach(([regionId, regionName]) => {
+                foItem.children.push({
+                  id: regionId,
+                  label: regionName,
+                })
+              })
+
+              this.subjectOptions.push(foItem)
+            }
+          )
+        }
+
+        // Преобразовываем данные для complex (project)
+        if (data.complex && data.complex.values) {
+          this.projectOptions = Object.entries(data.complex.values).map(
+            ([id, label]) => ({
+              id,
+              label,
+            })
+          )
+        }
+
+        // Преобразовываем данные для planning-quarter
+        if (data['planning-quarter'] && data['planning-quarter'].values) {
+          if (Array.isArray(data['planning-quarter'].values)) {
+            this.planningQuarterOptions = data['planning-quarter'].values.map(
+              (value, index) => ({
+                id: `q${index + 1}`,
+                label: value,
+              })
+            )
+          } else {
+            this.planningQuarterOptions = Object.entries(
+              data['planning-quarter'].values
+            ).map(([id, label]) => ({
+              id,
+              label,
+            }))
+          }
+        }
+
+        // Устанавливаем значения для square
+        if (data.square) {
+          const squareMin = parseFloat(data.square.from?.min)
+          const squareMax = parseFloat(data.square.to?.max)
+
+          // Убедимся, что min < max
+          // const validMin = isNaN(squareMin) ? 0 : squareMin
+          // const validMax = isNaN(squareMax)
+          //   ? 1000
+          //   : squareMax < validMin
+          //   ? validMin + 100
+          //   : squareMax
+
+          this.square = {
+            min: squareMin,
+            max: squareMax,
+            selected: {
+              min: squareMin,
+              max: squareMax,
+            },
+          }
+        }
+
+        // Устанавливаем значения для price
+        if (data.price) {
+          const priceMin = parseInt(data.price.from?.min)
+          const priceMax = parseInt(data.price.to?.max)
+
+          // Убедимся, что min < max
+          // const validMin = isNaN(priceMin) ? 0 : priceMin
+          // const validMax = isNaN(priceMax)
+          //   ? 2000000
+          //   : priceMax < validMin
+          //   ? validMin + 1000
+          //   : priceMax
+
+          this.price = {
+            min: priceMin,
+            max: priceMax,
+            selected: {
+              min: priceMin,
+              max: priceMax,
+            },
+          }
+        }
+      }
+    },
+
+    // --- Действия для фильтров ---
     async fetchFilters() {
+      // Если у нас уже есть данные из пропсов и мы не хотим использовать API,
+      // пропускаем запрос к API
+      if (this.initialRenderList && !this.useApiData) {
+        console.log(
+          'CatalogStore - Используем фильтры из пропсов, пропускаем API запрос'
+        )
+        return
+      }
+
       this.isLoading = true
       this.error = null
 
@@ -201,8 +355,8 @@ export const useCatalogStore = defineStore('catalog', {
 
         // Устанавливаем значения для price
         if (data.price) {
-          const priceMin = parseInt(data.price.from?.min || '0', 10)
-          const priceMax = parseInt(data.price.to?.max || '2000000', 10)
+          const priceMin = parseInt(data.price.from?.min)
+          const priceMax = parseInt(data.price.to?.max)
 
           this.price = {
             min: priceMin,
@@ -244,6 +398,9 @@ export const useCatalogStore = defineStore('catalog', {
         min: this.price.min,
         max: this.price.max,
       }
+
+      // После сброса фильтров переходим на использование API-данных
+      this.useApiData = true
       this.loadCatalogData()
       console.log('CatalogStore - Фильтры сброшены')
     },
@@ -367,6 +524,9 @@ export const useCatalogStore = defineStore('catalog', {
         this.dateRequestEnd = null
       }
 
+      // При изменении статуса переходим на использование API
+      this.useApiData = true
+
       // После изменения фильтра загружаем новые данные
       this.loadCatalogData()
     },
@@ -375,8 +535,48 @@ export const useCatalogStore = defineStore('catalog', {
 
     // Загрузка данных каталога на основе фильтров
     async loadCatalogData() {
+      // Если у нас есть initialRenderList и мы не хотим использовать API,
+      // просто используем имеющиеся данные
+      if (this.initialRenderList && !this.useApiData) {
+        console.log(
+          'CatalogStore - Используем данные из пропсов, пропускаем API запрос'
+        )
+
+        // Имитируем загрузку данных (чтобы интерфейс правильно реагировал)
+        this.isLoading = true
+
+        setTimeout(() => {
+          this.isLoading = false
+          this.items = this.initialRenderList.data || []
+
+          // Обрабатываем навигацию
+          if (this.initialRenderList.nav) {
+            this.pagination.currentPage =
+              this.initialRenderList.nav.NavPageNomer || 1
+            this.pagination.totalPages =
+              this.initialRenderList.nav.NavPageCount || 1
+            this.pagination.totalItems =
+              this.initialRenderList.nav.NavRecordCount || 0
+            this.pagination.perPage =
+              this.initialRenderList.nav.NavPageSize || this.pagination.perPage
+          }
+
+          // Устанавливаем заголовок
+          if (
+            this.initialRenderList.meta &&
+            this.initialRenderList.meta.content
+          ) {
+            this.catalogTitle = this.initialRenderList.meta.content.title || ''
+          }
+
+          console.log('CatalogStore - Данные из пропсов загружены')
+        }, 200)
+
+        return this.initialRenderList
+      }
+
       // Если уже идет загрузка, не начинаем новый запрос
-      // if (this.isLoading) return
+      if (this.isLoading) return
 
       this.isLoading = true
       this.error = null
@@ -390,7 +590,10 @@ export const useCatalogStore = defineStore('catalog', {
         params.limit = this.pagination.perPage
         params.sort = this.sortBy
 
-        console.log('CatalogStore - Загрузка данных с параметрами:', params)
+        console.log(
+          'CatalogStore - Загрузка данных с API с параметрами:',
+          params
+        )
 
         const response = await axios.get('/api/properties', { params })
 
@@ -414,7 +617,7 @@ export const useCatalogStore = defineStore('catalog', {
             this.catalogTitle = response.data.meta.content.title || ''
           }
 
-          console.log('CatalogStore - Данные успешно загружены')
+          console.log('CatalogStore - Данные успешно загружены с API')
           return response.data
         } else {
           throw new Error('Неверный формат ответа API')
@@ -439,6 +642,9 @@ export const useCatalogStore = defineStore('catalog', {
       )
       this.pagination.currentPage = page
 
+      // При смене страницы переходим на использование API
+      this.useApiData = true
+
       return this.loadCatalogData()
     },
 
@@ -446,6 +652,10 @@ export const useCatalogStore = defineStore('catalog', {
     async changeSort(sortBy) {
       console.log(`CatalogStore - Изменение сортировки: ${sortBy}`)
       this.sortBy = sortBy
+
+      // При изменении сортировки переходим на использование API
+      this.useApiData = true
+
       return this.loadCatalogData()
     },
 
@@ -453,6 +663,12 @@ export const useCatalogStore = defineStore('catalog', {
     setCatalogTabType(type) {
       console.log(`CatalogStore - Изменение типа каталога: ${type}`)
       this.catalogTabType = type
+
+      // Если переключаем тип каталога и уже используем API-данные,
+      // запросим новые данные с API
+      if (this.useApiData) {
+        this.loadCatalogData()
+      }
     },
 
     // Изменение количества элементов на странице
@@ -462,6 +678,9 @@ export const useCatalogStore = defineStore('catalog', {
       )
       this.pagination.perPage = size
       this.pagination.currentPage = 1 // Сбрасываем на первую страницу
+
+      // При изменении количества элементов на странице переходим на использование API
+      this.useApiData = true
 
       return this.loadCatalogData()
     },

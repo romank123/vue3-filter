@@ -3,12 +3,6 @@
     <div class="property-catalog__header">
       <h2 class="property-catalog__title h2-semibold">
         {{ catalogStore.catalogTitle || 'Каталог помещений' }}
-        <!-- <span
-          v-if="statusFilter && statusFilter !== 'all'"
-          class="property-catalog__status-badge"
-        >
-          {{ statusName }}
-        </span> -->
       </h2>
 
       <div class="property-catalog__controls">
@@ -142,25 +136,12 @@
   </div>
 </template>
 
-<!-- propertyCatalog.vue -->
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useCatalogStore } from '@/stores/catalogStore'
 import { storeToRefs } from 'pinia'
 import { Button } from './button'
 import PropertyCard from './PropertyCard.vue'
-
-// Определение Props
-const props = defineProps({
-  //   statusFilter: {
-  //     type: String,
-  //     default: 'all',
-  //   },
-  //   statusOptions: {
-  //     type: Object,
-  //     default: () => ({}),
-  //   },
-})
 
 // Инициализация единого хранилища
 const catalogStore = useCatalogStore()
@@ -168,23 +149,9 @@ const catalogStore = useCatalogStore()
 // Используем storeToRefs для сохранения реактивности
 const { filteredItems, filteredSortedItems } = storeToRefs(catalogStore)
 
-console.log('filteredItems!!!!', filteredItems.value)
-
-// Получаем список ID проектов из хранилища
-const projectIds = computed(() => {
-  if (!catalogStore.projectOptions) return []
-  return catalogStore.projectOptions.map(option => option.id)
-})
-
-// Используем вычисляемые свойства для доступа к данным из хранилища
+// Вычисляемые свойства для доступа к данным из хранилища
 const isLoading = computed(() => catalogStore.isLoading)
 const error = computed(() => catalogStore.error)
-
-// Вычисляемое свойство для отображения имени выбранного статуса
-// const statusName = computed(() => {
-//   if (props.statusFilter === 'all') return ''
-//   return props.statusOptions[props.statusFilter] || ''
-// })
 
 // Вычисляемые свойства для пагинации
 const currentPage = computed(() => catalogStore.pagination.currentPage)
@@ -205,6 +172,9 @@ const sortBy = computed({
   get: () => catalogStore.sortBy,
   set: value => {
     catalogStore.sortBy = value
+    // При изменении сортировки переключаемся на API
+    catalogStore.useApiData = true
+    catalogStore.loadCatalogData()
   },
 })
 
@@ -216,25 +186,6 @@ const catalogTabType = computed({
   },
 })
 
-// Фильтрация элементов в зависимости от выбранного таба
-// const filteredItems = computed(() => {
-//   console.log('h', catalogStore)
-//   if (!catalogStore.items.length) return []
-
-//   if (catalogTabType.value === 'projects') {
-//     // Показываем только проекты (те ID, которые есть в списке projectIds)
-//     return catalogStore.items.filter(item => projectIds.value.includes(item.id))
-//   } else if (catalogTabType.value === 'objects') {
-//     // Показываем только объекты (те ID, которых нет в списке projectIds)
-//     return catalogStore.items.filter(
-//       item => !projectIds.value.includes(item.id)
-//     )
-//   }
-
-//   // Если тип не определен, возвращаем все элементы
-//   return catalogStore.items
-// })
-
 // Сообщение при пустом результате
 const emptyResultMessage = computed(() => {
   if (catalogTabType.value === 'projects') {
@@ -243,36 +194,6 @@ const emptyResultMessage = computed(() => {
     return 'В данный момент объектов не найдено.'
   }
 })
-
-// Расчет сортированных элементов
-// const filteredSortedItems = computed(() => {
-//   if (!filteredItems.value.length) return []
-
-//   const [field, direction] = sortBy.value.split('-')
-//   let sorted = []
-//   sorted = [...filteredItems.value].sort((a, b) => {
-//     let valueA, valueB
-
-//     // Получаем значения в зависимости от поля сортировки
-//     if (field === 'price') {
-//       valueA = parseFloat(a.props.price) || 0
-//       valueB = parseFloat(b.props.price) || 0
-//     } else if (field === 'square') {
-//       valueA = parseFloat(a.props.square) || 0
-//       valueB = parseFloat(b.props.square) || 0
-//     } else {
-//       return 0
-//     }
-
-//     if (direction === 'asc') {
-//       return valueA - valueB
-//     } else {
-//       return valueB - valueA
-//     }
-//   })
-
-//   return sorted
-// })
 
 // Отображаемые элементы с учетом данных с сервера
 const displayedItems = computed(() => {
@@ -336,14 +257,13 @@ const changePageSize = () => {
     'PropertyCatalog - Изменение количества элементов на странице:',
     selectedPageSize.value
   )
-
-  //   catalogStore.setPageSize(selectedPageSize.value)
-  selectedPageSize.value
+  catalogStore.setPageSize(selectedPageSize.value)
 }
 
 // Загрузка данных
 const loadData = () => {
-  console.log('PropertyCatalog - Загрузка данных с API')
+  console.log('PropertyCatalog - Принудительная загрузка данных')
+  catalogStore.useApiData = true
   catalogStore.loadCatalogData()
 }
 
@@ -372,18 +292,6 @@ const openPropertyDetails = item => {
     window.location.href = item.url
   }
 }
-
-// Наблюдаем за изменениями статуса фильтра
-// watch(
-//   () => props.statusFilter,
-//   (newValue, oldValue) => {
-//     console.log('PropertyCatalog - Изменение статуса фильтра:', {
-//       oldValue,
-//       newValue,
-//     })
-//     // При изменении статуса можно выполнять дополнительные действия, если нужно
-//   }
-// )
 
 // Инициализация компонента
 onMounted(() => {

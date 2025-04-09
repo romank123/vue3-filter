@@ -11,6 +11,7 @@
           }ch`"
           ref="first"
           v-model="firstInput"
+          @input="onInputFilter($event, 'first')"
           @change="changeFirstInput"
           :size="firstSize"
         />
@@ -22,7 +23,7 @@
         :tooltip="'active'"
         ref="slider"
         :lazy="true"
-        :interval="intervalValue"
+        :interval="computedInterval"
         @change="changeSlider"
         v-model="internalValue"
       ></vue-slider>
@@ -33,6 +34,7 @@
           :style="`width:${
             String(secondInput) ? String(secondInput).length : 0
           }ch`"
+          @input="onInputFilter($event, 'second')"
           @change="changeSecondInput"
           v-model="secondInput"
           ref="second"
@@ -73,7 +75,7 @@ export default {
     intervalValue: {
       type: Number,
       required: true,
-      default: 0.1,
+      default: 1,
     },
     startValue: {
       type: Object,
@@ -140,8 +142,8 @@ export default {
     console.log('CustomRangeSlider - начальные значения:', {
       startValue: startVal,
       endValue: endVal,
-      initialMin,
-      initialMax,
+      startVal,
+      endVal,
     })
 
     return {
@@ -150,31 +152,40 @@ export default {
       secondSize: 1,
       firstInput: initialMin,
       secondInput: initialMax,
-      maxCount: 10000,
-      minCount: 0,
     }
   },
-  watch: {
-    // Следим за изменениями initialValues
-    initialValues: {
-      handler(newValues) {
-        if (newValues && Array.isArray(newValues) && newValues.length === 2) {
-          const min = parseFloat(newValues[0])
-          const max = parseFloat(newValues[1])
-          console.log('CustomRangeSlider - изменение initialValues:', {
-            min,
-            max,
-          })
+  computed: {
+    // Вычисляем подходящий интервал в зависимости от типа чисел (целые/дробные)
+    computedInterval() {
+      const min = parseFloat(this.startValue.value)
+      const max = parseFloat(this.endValue.value)
+      const range = max - min
 
-          if (!isNaN(min) && !isNaN(max)) {
-            this.internalValue = [min, max]
-            this.firstInput = min
-            this.secondInput = max
-          }
-        }
-      },
-      deep: true,
+      // Проверяем, есть ли дробные числа
+      const isDecimal =
+        this.hasDecimal(min) ||
+        this.hasDecimal(max) ||
+        this.hasDecimal(this.intervalValue) ||
+        !Number.isInteger(range / this.intervalValue)
+
+      if (isDecimal) {
+        // Для дробных чисел вычисляем подходящий интервал с учетом точности
+        const precision = this.getMaxPrecision(min, max, this.intervalValue)
+        const smallestStep = Math.pow(10, -precision)
+
+        // Убеждаемся, что интервал не меньше минимального шага
+        const adjustedInterval = Math.max(
+          smallestStep,
+          this.adjustIntervalForRange(min, max, this.intervalValue)
+        )
+
+        return adjustedInterval
+      }
+
+      return this.intervalValue
     },
+  },
+  watch: {
     // Следим за изменениями modelValue
     modelValue: {
       handler(newValues) {
@@ -220,60 +231,121 @@ export default {
       deep: true,
     },
     firstInput(newVal) {
-      if (newVal < this.startValue.value) {
-        this.firstInput = this.startValue.value
-      }
       this.firstSize = this.firstInput
         ? String(this.firstInput).length
         : String(this.startValue.value).length
     },
     secondInput(newVal) {
-      if (newVal > this.endValue.value) {
-        this.secondInput = this.endValue.value
-      }
       this.secondSize = this.secondInput
         ? String(this.secondInput).length
         : String(this.endValue.value).length
     },
   },
   mounted() {
-    // Инициализация значений при монтировании
-    // Всегда преобразуем значения через parseFloat для корректного отображения
-    if (
-      this.initialValues &&
-      Array.isArray(this.initialValues) &&
-      this.initialValues.length === 2
-    ) {
-      const min = parseFloat(this.initialValues[0])
-      const max = parseFloat(this.initialValues[1])
-
-      if (!isNaN(min) && !isNaN(max)) {
-        this.internalValue = [min, max]
-        this.firstInput = min
-        this.secondInput = max
-      }
-    } else {
-      const startVal = parseFloat(this.startValue.value)
-      const endVal = parseFloat(this.endValue.value)
-
-      if (!isNaN(startVal) && !isNaN(endVal)) {
-        this.internalValue = [startVal, endVal]
-        this.firstInput = startVal
-        this.secondInput = endVal
-      }
-    }
-
     console.log('CustomRangeSlider - mounted:', {
       internalValue: this.internalValue,
       firstInput: this.firstInput,
       secondInput: this.secondInput,
+      computedInterval: this.computedInterval,
     })
   },
   methods: {
+    // Новый метод для фильтрации ввода - только цифры, точка и запятая
+    onInputFilter(event, inputType) {
+      // Разрешаем только цифры, точку и запятую
+      const input = event.target
+      const value = input.value
+
+      // Заменяем запятую на точку для корректной работы с числами
+      if (value.includes(',')) {
+        input.value = value.replace(',', '.')
+
+        if (inputType === 'first') {
+          this.firstInput = input.value
+        } else {
+          this.secondInput = input.value
+        }
+      }
+
+      // Фильтруем недопустимые символы
+      const filteredValue = value.replace(/[^0-9.,]/g, '')
+
+      if (value !== filteredValue) {
+        input.value = filteredValue
+
+        if (inputType === 'first') {
+          this.firstInput = filteredValue
+        } else {
+          this.secondInput = filteredValue
+        }
+      }
+    },
+
+    // Проверка на наличие дробной части
+    hasDecimal(num) {
+      return num % 1 !== 0
+    },
+
+    // Получение максимальной точности (количество знаков после запятой)
+    getMaxPrecision(...numbers) {
+      let maxPrecision = 0
+
+      numbers.forEach(num => {
+        const strNum = String(num)
+        if (strNum.includes('.')) {
+          const precision = strNum.split('.')[1].length
+          maxPrecision = Math.max(maxPrecision, precision)
+        }
+      })
+
+      return maxPrecision
+    },
+
+    // Корректировка интервала для диапазона значений
+    adjustIntervalForRange(min, max, desiredInterval) {
+      const range = max - min
+
+      // Если диапазон делится нацело на желаемый интервал, используем его
+      if (range % desiredInterval === 0) {
+        return desiredInterval
+      }
+
+      // Иначе находим наименьший интервал, на который диапазон делится нацело
+      const precision = this.getMaxPrecision(min, max, desiredInterval)
+      const factor = Math.pow(10, precision)
+
+      // Преобразуем числа в целые для точных вычислений
+      const scaledMin = Math.round(min * factor)
+      const scaledMax = Math.round(max * factor)
+      const scaledRange = scaledMax - scaledMin
+      const scaledInterval = Math.round(desiredInterval * factor) || 1
+
+      // Находим наибольший общий делитель для диапазона и интервала
+      const gcd = this.findGCD(scaledRange, scaledInterval)
+
+      // Возвращаем скорректированный интервал
+      return gcd / factor || desiredInterval
+    },
+
+    // Наибольший общий делитель (алгоритм Евклида)
+    findGCD(a, b) {
+      a = Math.abs(a)
+      b = Math.abs(b)
+
+      while (b) {
+        const temp = b
+        b = a % b
+        a = temp
+      }
+
+      return a
+    },
+
     changeFirstInput() {
       if (!this.$refs.slider) return
 
       let newMin = parseFloat(this.firstInput)
+
       if (isNaN(newMin)) newMin = parseFloat(this.startValue.value)
 
       const newValues = [...this.internalValue]
@@ -286,11 +358,15 @@ export default {
       }
 
       if (newValues[0] >= newValues[1]) {
-        newValues[0] = newValues[1] - this.intervalValue
+        newValues[0] = this.computeValidValue(
+          newValues[1] - this.computedInterval,
+          this.computedInterval
+        )
       }
 
       console.log('CustomRangeSlider - changeFirstInput:', newValues)
       this.internalValue = newValues
+      this.firstInput = newValues[0] // Обновляем отображаемое значение
       this.$emit('update:modelValue', newValues)
       this.$emit('change', newValues)
     },
@@ -311,11 +387,15 @@ export default {
       }
 
       if (newValues[1] <= newValues[0]) {
-        newValues[1] = newValues[0] + this.intervalValue
+        newValues[1] = this.computeValidValue(
+          newValues[0] + this.computedInterval,
+          this.computedInterval
+        )
       }
 
       console.log('CustomRangeSlider - changeSecondInput:', newValues)
       this.internalValue = newValues
+      this.secondInput = newValues[1] // Обновляем отображаемое значение
       this.$emit('update:modelValue', newValues)
       this.$emit('change', newValues)
     },
@@ -333,6 +413,27 @@ export default {
         this.$emit('update:modelValue', [min, max])
         this.$emit('change', [min, max])
       }
+    },
+
+    // Вычисление корректного значения с учетом интервала
+    computeValidValue(value, interval) {
+      const min = parseFloat(this.startValue.value)
+      const max = parseFloat(this.endValue.value)
+
+      // Округляем до ближайшего кратного интервалу
+      const steps = Math.round((value - min) / interval)
+      let result = min + steps * interval
+
+      // Ограничиваем значение диапазоном
+      result = Math.max(min, Math.min(max, result))
+
+      // Если есть дробная часть, округляем до той же точности, что и интервал
+      const precision = this.getMaxPrecision(interval)
+      if (precision > 0) {
+        result = parseFloat(result.toFixed(precision))
+      }
+
+      return result
     },
   },
   emits: ['update:modelValue', 'change'],
